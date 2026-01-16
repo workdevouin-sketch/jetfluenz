@@ -1,0 +1,82 @@
+.loaderContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #2008b9;
+    z-index: 9999;
+}
+
+.innerContainer {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* The Mask Container */
+.textMask {
+    overflow: hidden;
+    /* This cuts off the text when it's "below" */
+    padding-bottom: 5px;
+    /* Space for the descenders */
+    margin-bottom: 15px;
+}
+
+.brandName {
+    font-size: 48px;
+    /* Larger size since it's the only element */
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    /* Tight, modern tracking */
+    color: #ffffff;
+    line-height: 1;
+
+    /* Initial State: pushed down */
+    transform: translateY(110%);
+
+    /* The Reveal Animation */
+    animation: textAscent 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Optional: A subtle pulsing loading bar underneath */
+.loadingBar {
+    width: 0%;
+    height: 3px;
+    background-color: #ffffff;
+    opacity: 0.4;
+    animation: loadLine 2s cubic-bezier(0.23, 1, 0.32, 1) infinite;
+    align-self: flex-start;
+}
+
+/* --- Keyframes --- */
+@keyframes textAscent {
+    0% {
+        transform: translateY(110%);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
+
+@keyframes loadLine {
+    0% {
+        width: 0%;
+        opacity: 0.6;
+    }
+
+    50% {
+        width: 60%;
+        opacity: 0.4;
+    }
+
+    100% {
+        width: 100%;
+        opacity: 0;
+    }
+}

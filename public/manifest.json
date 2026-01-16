@@ -1,0 +1,21 @@
+{
+  "name": "Jetfluenz",
+  "short_name": "Jetfluenz",
+  "description": "Connect Micro-Influencers with Businesses",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1F07BA",
+  "theme_color": "#1F07BA",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
