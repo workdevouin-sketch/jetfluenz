@@ -228,7 +228,7 @@ export default function Home() {
           <div className="container mx-auto relative z-10">
             <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
               <div className="text-center lg:text-left">
-                <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-white mb-4 md:mb-6 leading-tight animate-fade-in-left">
+                <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-white mb-4 md:mb-6 leading-tight animate-fade-in-left">
                   Jetfluenz
                 </h1>
                 <p className="text-lg sm:text-xl text-white/80 mb-6 md:mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed animate-fade-in-left" style={{ animationDelay: '0.2s', opacity: 0 }}>
@@ -281,7 +281,7 @@ export default function Home() {
         <section id="for-whom" className="py-20 px-4 md:px-6 bg-white min-h-screen flex items-center">
           <div className="container mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-5xl md:text-6xl font-bold text-black relative inline-block">
+              <h2 className="text-4xl md:text-6xl font-bold text-black relative inline-block">
                 For Whom<span className="text-orange-500">?</span>
               </h2>
             </div>
@@ -386,12 +386,12 @@ export default function Home() {
         <section id="solution" className="py-20 px-4 md:px-6 bg-[#2008b9] min-h-screen flex items-center">
           <div className="container mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-5xl md:text-6xl font-bold text-white relative inline-block">
+              <h2 className="text-4xl md:text-6xl font-bold text-white relative inline-block">
                 Our Solution<span className="text-orange-500">.</span>
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto auto-rows-[minmax(350px,auto)]">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto auto-rows-[minmax(280px,auto)] md:auto-rows-[minmax(350px,auto)]">
 
               {/* What We Do? - Large Card */}
               <div className="md:col-span-2 bg-white rounded-[2rem] p-10 flex flex-col justify-between hover:scale-[1.02] transition-transform duration-300">
