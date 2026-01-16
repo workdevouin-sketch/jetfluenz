@@ -14,7 +14,34 @@ export default function StepBusiness({ onSubmit, isSubmitting, initialData }) {
     const [currentStep, setCurrentStep] = useState(0);
     const [data, setData] = useState(initialData || {});
 
+    const [validationError, setValidationError] = useState('');
+
+    const validateStep = (stepId) => {
+        setValidationError('');
+        if (stepId === 'identity') {
+            if (!data.companyName || !data.email || !data.phone) {
+                setValidationError('Please fill in all required company details.');
+                return false;
+            }
+        }
+        if (stepId === 'profile') {
+            if (!data.website) {
+                setValidationError('Website URL is required.');
+                return false;
+            }
+        }
+        if (stepId === 'legal') {
+            if (!data.agreedToTerms || !data.agreedToAuthorized) {
+                setValidationError('You must agree to the terms to proceed.');
+                return false;
+            }
+        }
+        return true;
+    };
+
     const handleNext = () => {
+        if (!validateStep(STEPS[currentStep].id)) return;
+
         if (currentStep < STEPS.length - 1) {
             setCurrentStep(prev => prev + 1);
         } else {
@@ -113,17 +140,32 @@ export default function StepBusiness({ onSubmit, isSubmitting, initialData }) {
                             </h3>
                             <div className="bg-white/5 p-6 rounded-xl border border-white/10 space-y-4">
                                 <label className="flex items-start space-x-3 cursor-pointer group">
-                                    <input type="checkbox" className="mt-1 w-5 h-5 rounded border-white/30 bg-white/10 checked:bg-emerald-500 checked:border-transparent transition-all" />
+                                    <input
+                                        type="checkbox"
+                                        name="agreedToTerms"
+                                        checked={data.agreedToTerms || false}
+                                        onChange={(e) => setData({ ...data, agreedToTerms: e.target.checked })}
+                                        className="mt-1 w-5 h-5 rounded border-white/30 bg-white/10 checked:bg-emerald-500 checked:border-transparent transition-all"
+                                    />
                                     <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">
                                         I agree to the Terms of Service and Privacy Policy.
                                     </span>
                                 </label>
                                 <label className="flex items-start space-x-3 cursor-pointer group">
-                                    <input type="checkbox" className="mt-1 w-5 h-5 rounded border-white/30 bg-white/10 checked:bg-emerald-500 checked:border-transparent transition-all" />
+                                    <input
+                                        type="checkbox"
+                                        name="agreedToAuthorized"
+                                        checked={data.agreedToAuthorized || false}
+                                        onChange={(e) => setData({ ...data, agreedToAuthorized: e.target.checked })}
+                                        className="mt-1 w-5 h-5 rounded border-white/30 bg-white/10 checked:bg-emerald-500 checked:border-transparent transition-all"
+                                    />
                                     <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">
                                         I confirm that I am authorized to represent this business.
                                     </span>
                                 </label>
+                                {validationError && (
+                                    <div className="text-red-400 text-sm animate-pulse">{validationError}</div>
+                                )}
                             </div>
                         </motion.div>
                     )}

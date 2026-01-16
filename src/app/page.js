@@ -208,7 +208,7 @@ export default function Home() {
       <div style={{ backgroundColor: '#2008b9' }}>
 
         {/* Hero Section */}
-        <section id="home" className="relative py-16 md:py-20 px-4 md:px-6 min-h-screen flex items-center overflow-hidden">
+        <section id="home" className="relative pt-32 pb-16 md:py-20 px-4 md:px-6 min-h-screen flex items-center overflow-hidden">
           {/* Decorative Lines */}
           <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
             {/* Top line - full width */}
@@ -732,6 +732,13 @@ export default function Home() {
                 className="text-white/80 hover:text-white transition-colors underline underline-offset-2"
               >
                 Terms & Conditions
+              </a>
+              <span className="mx-2 text-white/40">|</span>
+              <a
+                href="/privacy"
+                className="text-white/80 hover:text-white transition-colors underline underline-offset-2"
+              >
+                Privacy Policy
               </a>
             </p>
           </div>
