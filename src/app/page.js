@@ -726,6 +726,13 @@ export default function Home() {
               >
                 Devou Solutions
               </a>
+              <span className="mx-2 text-white/40">|</span>
+              <a
+                href="/terms"
+                className="text-white/80 hover:text-white transition-colors underline underline-offset-2"
+              >
+                Terms & Conditions
+              </a>
             </p>
           </div>
         </div>
