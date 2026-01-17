@@ -1,0 +1,78 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { LayoutGrid, Briefcase, DollarSign, Users, Settings, LogOut } from 'lucide-react';
+
+const Sidebar = ({ role = 'influencer' }) => {
+    const pathname = usePathname();
+    const basePath = `/dashboard/${role}`;
+
+    let navItems = [];
+
+    if (role === 'admin') {
+        const adminPath = '/admin';
+        navItems = [
+            { name: 'Influencers', href: `${adminPath}?tab=influencers`, icon: Users },
+            { name: 'Business', href: `${adminPath}?tab=business`, icon: Briefcase },
+            { name: 'Campaigns', href: `${adminPath}?tab=campaigns`, icon: Briefcase },
+        ];
+    } else {
+        navItems = [
+            { name: 'Dashboard', href: `${basePath}`, icon: LayoutGrid },
+            { name: 'Campaigns', href: `${basePath}/campaigns`, icon: Briefcase },
+            { name: 'Earnings', href: `${basePath}/earnings`, icon: DollarSign },
+            { name: 'Settings', href: `${basePath}/settings`, icon: Settings },
+        ];
+    }
+
+    return (
+        <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-100 h-screen fixed left-0 top-0 z-30">
+            {/* Logo Area */}
+            <div className="p-8 flex items-center">
+                <Link href="/" className="flex items-center gap-2">
+                    <span className="text-2xl font-bold text-[#2008b9]">Jetfluenz.</span>
+                </Link>
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex-1 px-4 space-y-2">
+                {navItems.map((item) => {
+                    const isActive = pathname === item.href || (item.name !== 'Dashboard' && pathname.startsWith(item.href));
+                    return (
+                        <Link
+                            key={item.name}
+                            href={item.href}
+                            className={`flex items-center gap-4 px-6 py-4 rounded-xl transition-colors relative ${isActive
+                                ? 'text-[#2008b9]'
+                                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                                }`}
+                        >
+                            {isActive && (
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1.5 bg-[#2008b9] rounded-r-md"></div>
+                            )}
+                            <item.icon className="w-6 h-6" />
+                            <span className="font-medium text-base">{item.name}</span>
+                        </Link>
+                    );
+                })}
+            </nav>
+
+            {/* Footer / Logout */}
+            <div className="p-4 mt-auto">
+                <button
+                    onClick={() => {
+                        localStorage.removeItem('jetfluenz_user');
+                        window.location.href = '/login'; // Using window.location to ensure full refresh/state clear
+                    }}
+                    className="flex items-center gap-4 px-6 py-4 text-gray-400 hover:text-red-500 hover:bg-red-50 w-full rounded-xl transition-colors"
+                >
+                    <LogOut className="w-6 h-6" />
+                    <span className="font-medium text-base">Logout</span>
+                </button>
+            </div>
+        </aside>
+    );
+};
+
+export default Sidebar;
