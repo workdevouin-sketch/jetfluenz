@@ -30,7 +30,7 @@ export default function BusinessCampaigns() {
 
     const fetchCampaigns = async () => {
         try {
-            const user = JSON.parse(localStorage.getItem('jetfluenz_user'));
+            const user = JSON.parse(localStorage.getItem('jetfluenz_business_session'));
             if (user?.id) {
                 const res = await getBusinessCampaigns(user.id);
                 if (res.success) {
@@ -48,7 +48,7 @@ export default function BusinessCampaigns() {
         e.preventDefault();
         setCreateLoading(true);
         try {
-            const user = JSON.parse(localStorage.getItem('jetfluenz_user'));
+            const user = JSON.parse(localStorage.getItem('jetfluenz_business_session'));
 
             if (editingCampaign) {
                 // Update existing campaign

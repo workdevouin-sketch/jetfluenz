@@ -15,7 +15,7 @@ export default function InfluencerDashboard() {
     useEffect(() => {
         const fetchUserData = async () => {
             try {
-                const storedUser = JSON.parse(localStorage.getItem('jetfluenz_user'));
+                const storedUser = JSON.parse(localStorage.getItem('jetfluenz_influencer_session'));
                 if (storedUser?.id) {
                     // Fetch Profile
                     const docRef = doc(db, 'users', storedUser.id);

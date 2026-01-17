@@ -62,8 +62,16 @@ const Sidebar = ({ role = 'influencer' }) => {
             <div className="p-4 mt-auto">
                 <button
                     onClick={() => {
-                        localStorage.removeItem('jetfluenz_user');
-                        window.location.href = '/login'; // Using window.location to ensure full refresh/state clear
+                        let sessionKey = 'jetfluenz_user';
+                        if (role === 'admin') sessionKey = 'jetfluenz_admin_session';
+                        if (role === 'business') sessionKey = 'jetfluenz_business_session';
+                        if (role === 'influencer') sessionKey = 'jetfluenz_influencer_session';
+
+                        localStorage.removeItem(sessionKey);
+                        // Also clear fallback just in case, or if adminAuthenticated is used
+                        if (role === 'admin') localStorage.removeItem('adminAuthenticated');
+
+                        window.location.href = '/login';
                     }}
                     className="flex items-center gap-4 px-6 py-4 text-gray-400 hover:text-red-500 hover:bg-red-50 w-full rounded-xl transition-colors"
                 >

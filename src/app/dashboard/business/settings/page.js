@@ -16,7 +16,7 @@ export default function BusinessSettings() {
     useEffect(() => {
         const fetchUserData = async () => {
             try {
-                const storedUser = JSON.parse(localStorage.getItem('jetfluenz_user'));
+                const storedUser = JSON.parse(localStorage.getItem('jetfluenz_business_session'));
                 if (storedUser?.id) {
                     const docRef = doc(db, 'users', storedUser.id);
                     const docSnap = await getDoc(docRef);

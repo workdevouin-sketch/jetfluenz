@@ -10,17 +10,19 @@ export default function DashboardLayout({ children, role, title }) {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const userSession = localStorage.getItem('jetfluenz_user');
+        let sessionKey = 'jetfluenz_user'; // fallback
+        if (role === 'admin') sessionKey = 'jetfluenz_admin_session';
+        if (role === 'business') sessionKey = 'jetfluenz_business_session';
+        if (role === 'influencer') sessionKey = 'jetfluenz_influencer_session';
+
+        const userSession = localStorage.getItem(sessionKey);
 
         if (!userSession) {
             router.push('/login');
         } else {
-            // Optional: Check if role matches what's expected? 
-            // For now just basic auth guard is sufficient as per request.
-            // We could parse JSON and check role, but Sidebar handles role-based rendering anyway.
             setIsLoading(false);
         }
-    }, [router]);
+    }, [router, role]);
 
     if (isLoading) {
         return (

@@ -14,7 +14,7 @@ export default function InfluencerCampaigns() {
 
     useEffect(() => {
         // Load user from local storage
-        const storedUser = localStorage.getItem('user');
+        const storedUser = localStorage.getItem('jetfluenz_influencer_session');
         if (storedUser) {
             setUser(JSON.parse(storedUser));
         }

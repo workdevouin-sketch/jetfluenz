@@ -22,7 +22,7 @@ export default function LoginPage() {
         try {
             // 1. Check for Admin Credentials (Hardcoded)
             if (email === 'devou.in@gmail.com' && password === 'jetfluenz2026') {
-                localStorage.setItem('jetfluenz_user', JSON.stringify({
+                localStorage.setItem('jetfluenz_admin_session', JSON.stringify({
                     id: 'admin_master',
                     role: 'admin',
                     email: email,
@@ -71,14 +71,18 @@ export default function LoginPage() {
             }
 
             // 3. Login Success
-            // Persist simple session (in real app, use Firebase Auth)
-            localStorage.setItem('jetfluenz_user', JSON.stringify({ id: userId, ...userData }));
-
-            // Redirect based on role
+            // Persist session to role-specific storage
+            const sessionData = { id: userId, ...userData };
             if (userData.role === 'business') {
+                localStorage.setItem('jetfluenz_business_session', JSON.stringify(sessionData));
                 router.push('/dashboard/business');
-            } else {
+            } else if (userData.role === 'influencer') {
+                localStorage.setItem('jetfluenz_influencer_session', JSON.stringify(sessionData));
                 router.push('/dashboard/influencer');
+            } else {
+                // Fallback
+                localStorage.setItem('jetfluenz_user', JSON.stringify(sessionData));
+                router.push('/dashboard');
             }
 
         } catch (err) {
