@@ -163,7 +163,20 @@ export default function AdminWaitlist() {
             }
 
             const res = await addUserFromAdmin(dataToSubmit);
-            if (res.success) { await fetchData(); setShowAddForm(false); setFormData({ email: '', role: 'influencer', instagram: '', phone: '', status: 'waitlist' }); }
+            if (res.success) {
+                // Auto-sync Instagram stats if influencer
+                if (dataToSubmit.role === 'influencer' && dataToSubmit.instagram) {
+                    // Background fetch - don't await to block UI, but maybe show a toast?
+                    // For now we just fire it.
+                    const { syncInstagramStats } = await import('../../lib/instagram');
+                    syncInstagramStats(res.id, dataToSubmit.instagram).then(r => {
+                        if (r.success) console.log("Initial stats synced");
+                    });
+                }
+                await fetchData();
+                setShowAddForm(false);
+                setFormData({ email: '', role: 'influencer', instagram: '', phone: '', status: 'waitlist' });
+            }
         } finally { setActionLoading(false); }
     };
 
@@ -403,7 +416,11 @@ export default function AdminWaitlist() {
                                                     {user.role === 'influencer' && user.instagram && (
                                                         <button
                                                             onClick={() => {
-                                                                setAnalysisUser({ instagram: user.instagram });
+                                                                setAnalysisUser({
+                                                                    instagram: user.instagram,
+                                                                    id: user.id,
+                                                                    instagram_stats: user.instagram_stats
+                                                                });
                                                                 setShowAnalysisModal(true);
                                                             }}
                                                             className="p-2 text-gray-400 hover:text-[#2008b9] bg-white border border-gray-100 hover:border-[#2008b9]/30 rounded-lg shadow-sm"
@@ -477,7 +494,11 @@ export default function AdminWaitlist() {
                                                     <button
                                                         type="button"
                                                         onClick={() => {
-                                                            setAnalysisUser({ instagram: formData.instagram });
+                                                            setAnalysisUser({
+                                                                instagram: formData.instagram,
+                                                                id: editingUser?.id,
+                                                                instagram_stats: editingUser?.instagram_stats
+                                                            });
                                                             setShowAnalysisModal(true);
                                                         }}
                                                         className="px-4 py-2 bg-[#2008b9]/10 text-[#2008b9] font-medium rounded-xl hover:bg-[#2008b9]/20 transition-colors flex items-center gap-2"
@@ -820,7 +841,11 @@ export default function AdminWaitlist() {
                             </button>
                         </div>
                         <div className="p-8">
-                            <InstagramStats predefinedUsername={analysisUser.instagram} />
+                            <InstagramStats
+                                predefinedUsername={analysisUser.instagram}
+                                userId={analysisUser.id}
+                                initialStats={analysisUser.instagram_stats}
+                            />
                         </div>
                     </div>
                 </div>

@@ -198,7 +198,11 @@ export default function InfluencerDashboard() {
                     <div className="lg:col-span-2 space-y-8">
 
                         {/* Instagram Analytics Panel */}
-                        <InstagramStats predefinedUsername={userData?.instagram} />
+                        <InstagramStats
+                            predefinedUsername={userData?.instagram}
+                            userId={userData?.id}
+                            initialStats={userData?.instagram_stats}
+                        />
 
                         {/* Ready for more Card */}
                         <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 text-center">

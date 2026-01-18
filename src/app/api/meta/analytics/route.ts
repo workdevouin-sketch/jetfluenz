@@ -143,7 +143,11 @@ export async function GET(request: Request) {
             avg_image_likes: Number(avgImageLikes),
             format_efficiency: formatEfficiency,
             posting_frequency: postingFrequency,
-            // _debug: { videoCount, imageCount, totalLikes, totalComments, mediaCount }
+            // Raw metrics for frontend calculation (more accurate with profile follower count)
+            total_likes: totalLikes,
+            total_comments: totalComments,
+            media_count: mediaCount,
+            followers_used: followers
         });
 
     } catch (error) {

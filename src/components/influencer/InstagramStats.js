@@ -3,13 +3,45 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw, CheckCircle, TrendingUp, Image as ImageIcon, MessageCircle, Calendar, Hash, AtSign, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { syncInstagramStats, shouldUpdateStats } from '../../lib/instagram';
 
-export default function InstagramStats({ predefinedUsername }) {
-    const [username, setUsername] = useState('');
-    const [loading, setLoading] = useState(!!predefinedUsername);
-    const [data, setData] = useState(null);
+export default function InstagramStats({ predefinedUsername, userId, initialStats }) {
+    // Priority: State -> Initial Props -> Null
+    const [username, setUsername] = useState(predefinedUsername || '');
+    const [data, setData] = useState(initialStats || null);
+    const [loading, setLoading] = useState(!initialStats && !!predefinedUsername);
     const [error, setError] = useState(null);
-    const [isLinked, setIsLinked] = useState(!!predefinedUsername);
+    const [isLinked, setIsLinked] = useState(!!initialStats || !!predefinedUsername);
+
+    // Update state if props change (e.g. parent fetch completes)
+    useEffect(() => {
+        if (initialStats) {
+            setData(initialStats);
+            setIsLinked(true);
+            setLoading(false);
+            if (initialStats.last_fetched) {
+                checkAndBackgroundUpdate(initialStats.last_fetched, predefinedUsername);
+            }
+        } else if (predefinedUsername && !data) {
+            // No initial stats but we have a username -> Fetch fresh
+            fetchData(predefinedUsername);
+        }
+    }, [initialStats, predefinedUsername]);
+
+    const checkAndBackgroundUpdate = async (lastFetched, user) => {
+        if (shouldUpdateStats(lastFetched)) {
+            console.log("Stats are stale. Updating in background...");
+            // Silent update
+            try {
+                const res = await syncInstagramStats(userId, user);
+                if (res.success && res.data) {
+                    setData(res.data); // Update UI with fresh data
+                }
+            } catch (e) {
+                console.error("Background update failed", e);
+            }
+        }
+    };
 
     const getUsernameFromInput = (input) => {
         if (!input) return '';
@@ -36,44 +68,33 @@ export default function InstagramStats({ predefinedUsername }) {
         setLoading(true);
         setError(null);
 
-        // CHECK CACHE
-        const cacheKey = `jetfluenz_stats_${userToFetch}`;
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-            try {
-                const parsed = JSON.parse(cached);
-                setData(parsed);
-                setIsLinked(true);
-                setUsername(userToFetch);
-                setLoading(false);
-                return; // Stop here, use cache
-            } catch (e) {
-                console.error("Cache parse error", e);
-                localStorage.removeItem(cacheKey);
-            }
-        }
-
         try {
-            const [profileRes, analyticsRes] = await Promise.all([
-                fetch(`/api/meta/business-discovery?username=${userToFetch}`),
-                fetch(`/api/meta/analytics?username=${userToFetch}`)
-            ]);
+            // 1. First, try to get from DB directly if not already there
+            if (userId) {
+                const { getStatsFromDB } = await import('../../lib/instagram');
+                const dbStats = await getStatsFromDB(userId);
+                if (dbStats) {
+                    setData(dbStats);
+                    setIsLinked(true);
+                    setUsername(userToFetch);
+                    setLoading(false);
+                    // Check for staleness in background
+                    // If stale, this will fire the API call invisibly
+                    if (dbStats.last_fetched) {
+                        checkAndBackgroundUpdate(dbStats.last_fetched, userToFetch);
+                    }
+                    return; // EXIT HERE so we don't double fetch
+                }
+            }
 
-            const profileData = await profileRes.json();
-            const analyticsData = await analyticsRes.json();
+            // 2. Only if DB failed/empty, call the API (Sync)
+            const res = await syncInstagramStats(userId, userToFetch);
 
-            if (profileData.error) throw new Error(profileData.error.message || profileData.error);
-            if (analyticsData.error) throw new Error(analyticsData.error);
+            if (!res.success) {
+                throw new Error(res.error || 'Failed to fetch');
+            }
 
-            const processedData = {
-                profile: profileData.business_discovery,
-                metrics: analyticsData
-            };
-
-            // SET CACHE
-            localStorage.setItem(cacheKey, JSON.stringify(processedData));
-
-            setData(processedData);
+            setData(res.data);
             setIsLinked(true);
             setUsername(userToFetch);
         } catch (err) {
@@ -83,12 +104,6 @@ export default function InstagramStats({ predefinedUsername }) {
             setLoading(false);
         }
     };
-
-    useEffect(() => {
-        if (predefinedUsername) {
-            fetchData(predefinedUsername);
-        }
-    }, [predefinedUsername]);
 
     const handleConnect = () => {
         if (username) fetchData(username);
@@ -258,7 +273,20 @@ export default function InstagramStats({ predefinedUsername }) {
                 <div className="flex justify-between items-start mb-2">
                     <div>
                         <p className="text-gray-400 text-sm font-medium">Engagement rate</p>
-                        <h4 className="text-3xl font-bold text-[#2008b9] mt-1">{data.metrics.engagement_rate}</h4>
+                        {/* Recalculate rate using verified profile followers to avoid API glitches */}
+                        <h4 className="text-3xl font-bold text-[#2008b9] mt-1">
+                            {(() => {
+                                // Fallback to API provided rate if raw metrics aren't active yet
+                                if (data.metrics.total_likes === undefined) return data.metrics.engagement_rate;
+
+                                const followers = data.profile.followers_count || 1;
+                                const totalEng = (data.metrics.total_likes || 0) + (data.metrics.total_comments || 0);
+                                const count = data.metrics.media_count || 1;
+                                const avgEng = totalEng / count;
+                                const rate = ((avgEng / followers) * 100).toFixed(2);
+                                return `${rate}%`;
+                            })()}
+                        </h4>
                     </div>
                     <span className="bg-[#2008b9]/10 text-[#2008b9] px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
                         🤩 Excellent!
