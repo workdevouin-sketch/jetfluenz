@@ -27,7 +27,7 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
         }
         if (stepId === 'social') {
             if (!data.instagram) {
-                setValidationError('Instagram URL is required.');
+                setValidationError('Instagram ID is required.');
                 return false;
             }
         }
@@ -118,11 +118,8 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                                 <Instagram className="w-5 h-5 mr-2 text-pink-400" /> Social Presence
                             </h3>
                             <div className="space-y-4">
-                                <Input label="Instagram URL" name="instagram" value={data.instagram} onChange={handleChange} placeholder="https://instagram.com/jane.doe" />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <Input label="Follower Count" name="followers" value={data.followers} onChange={handleChange} placeholder="10k" />
-                                    <Input label="Engagement Rate (%)" name="engagement" value={data.engagement} onChange={handleChange} placeholder="4.5%" />
-                                </div>
+                                <Input label="Instagram ID" name="instagram" value={data.instagram} onChange={handleChange} placeholder="@username" />
+
                                 <Input label="Primary Niche" name="niche" value={data.niche} onChange={handleChange} placeholder="e.g., Fashion, Travel, Tech" />
                             </div>
                         </motion.div>

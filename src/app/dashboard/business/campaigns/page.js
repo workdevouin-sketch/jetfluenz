@@ -151,23 +151,24 @@ export default function BusinessCampaigns() {
             {/* Accepted Collabs Section */}
             <div className="mb-10">
                 <h3 className="text-lg font-bold text-[#343C6A] mb-4">Accepted Collaborations</h3>
-                {campaigns.flatMap(c => c.applicants || []).filter(a => a.status === 'accepted').length === 0 ? (
+                {campaigns.filter(c => c.status === 'accepted').length === 0 ? (
                     <div className="bg-white p-6 rounded-xl border border-gray-100 text-center text-gray-400 text-sm">
                         No accepted collaborations yet.
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {campaigns.flatMap(c => (c.applicants || []).filter(a => a.status === 'accepted').map((applicant, idx) => (
-                            <div key={`${c.id}-${idx}`} className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm flex items-center gap-4">
+                        {campaigns.filter(c => c.status === 'accepted').map((campaign) => (
+                            <div key={campaign.id} className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm flex items-center gap-4">
                                 <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold">
-                                    {applicant.name?.[0] || 'I'}
+                                    {campaign.assignedTo?.name?.[0] || 'I'}
                                 </div>
                                 <div className="overflow-hidden">
-                                    <p className="font-bold text-[#343C6A] truncate">{applicant.name || 'Influencer'}</p>
-                                    <p className="text-xs text-gray-500 truncate">Campaign: {c.title}</p>
+                                    <p className="font-bold text-[#343C6A] truncate">{campaign.assignedTo?.name || 'Influencer'}</p>
+                                    <p className="text-xs text-gray-500 truncate">Campaign: {campaign.title}</p>
+                                    <p className="text-[10px] text-green-600 font-bold mt-1 bg-green-50 inline-block px-2 py-0.5 rounded-full">Started {campaign.acceptedAt ? new Date(campaign.acceptedAt.seconds * 1000).toLocaleDateString() : 'Recently'}</p>
                                 </div>
                             </div>
-                        )))}
+                        ))}
                     </div>
                 )}
             </div>

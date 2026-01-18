@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import DashboardLayout from '../../components/dashboard/DashboardLayout';
-import { Instagram, Globe, Phone, Mail, Eye, Edit2, Trash2, Search, Filter, Download, Briefcase, Plus, UserPlus, X, Check } from 'lucide-react';
+import { Instagram, Globe, Phone, Mail, Eye, Edit2, Trash2, Search, Filter, Download, Briefcase, Plus, UserPlus, X, Check, BarChart2 } from 'lucide-react';
 import { getWaitlistUsers, updateWaitlistUser, deleteWaitlistUser, addUserFromAdmin } from '../../lib/waitlist';
 import { getAllCampaigns, assignCampaign, updateCampaign } from '../../lib/campaigns';
+
+import InstagramStats from '../../components/influencer/InstagramStats';
 
 export default function AdminWaitlist() {
     const searchParams = useSearchParams();
@@ -30,6 +32,8 @@ export default function AdminWaitlist() {
     // CRUD State
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
+    const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+    const [analysisUser, setAnalysisUser] = useState(null);
     const [viewingUser, setViewingUser] = useState(null);
     const [formData, setFormData] = useState({
         email: '', role: 'influencer', instagram: '', phone: '', status: 'waitlist'
@@ -127,12 +131,38 @@ export default function AdminWaitlist() {
         return Object.keys(errors).length === 0;
     };
 
+    const fetchInstagramImage = async (instagramInput) => {
+        if (!instagramInput) return null;
+        try {
+            let handle = instagramInput;
+            if (handle.includes('instagram.com')) {
+                const url = new URL(handle.startsWith('http') ? handle : `https://${handle}`);
+                const parts = url.pathname.split('/').filter(Boolean);
+                handle = parts[0] || handle;
+            }
+            handle = handle.replace(/\/$/, '');
+
+            const res = await fetch(`/api/meta/business-discovery?username=${handle}`);
+            const metaData = await res.json();
+            return metaData?.business_discovery?.profile_picture_url || null;
+        } catch (e) {
+            console.error('Failed to fetch IG image', e);
+            return null;
+        }
+    };
+
     const handleAddUser = async (e) => {
         e.preventDefault();
         if (!validateForm()) return;
         setActionLoading(true);
         try {
-            const res = await addUserFromAdmin(formData);
+            let dataToSubmit = { ...formData };
+            if (dataToSubmit.role === 'influencer' && dataToSubmit.instagram) {
+                const img = await fetchInstagramImage(dataToSubmit.instagram);
+                if (img) dataToSubmit.image = img;
+            }
+
+            const res = await addUserFromAdmin(dataToSubmit);
             if (res.success) { await fetchData(); setShowAddForm(false); setFormData({ email: '', role: 'influencer', instagram: '', phone: '', status: 'waitlist' }); }
         } finally { setActionLoading(false); }
     };
@@ -142,7 +172,14 @@ export default function AdminWaitlist() {
         if (!validateForm()) return;
         setActionLoading(true);
         try {
-            const res = await updateWaitlistUser(editingUser.id, formData);
+            let dataToSubmit = { ...formData };
+            if (dataToSubmit.role === 'influencer' && dataToSubmit.instagram && dataToSubmit.instagram !== editingUser.instagram) {
+                // Only refetch if instagram changed, or forced? Let's just fetch if present to be safe/update it.
+                const img = await fetchInstagramImage(dataToSubmit.instagram);
+                if (img) dataToSubmit.image = img;
+            }
+
+            const res = await updateWaitlistUser(editingUser.id, dataToSubmit);
             if (res.success) { await fetchData(); setShowAddForm(false); setEditingUser(null); }
         } finally { setActionLoading(false); }
     };
@@ -363,6 +400,18 @@ export default function AdminWaitlist() {
                                             <td className="px-6 py-4 text-sm text-gray-500">{new Date(user.submittedAt?.seconds * 1000 || Date.now()).toLocaleDateString()}</td>
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-2 text-gray-500">
+                                                    {user.role === 'influencer' && user.instagram && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setAnalysisUser({ instagram: user.instagram });
+                                                                setShowAnalysisModal(true);
+                                                            }}
+                                                            className="p-2 text-gray-400 hover:text-[#2008b9] bg-white border border-gray-100 hover:border-[#2008b9]/30 rounded-lg shadow-sm"
+                                                            title="Analyse Profile"
+                                                        >
+                                                            <BarChart2 className="w-4 h-4" />
+                                                        </button>
+                                                    )}
                                                     <button onClick={() => setViewingUser(user)} className="p-2 text-gray-400 hover:text-blue-600 bg-white border border-gray-100 hover:border-blue-200 rounded-lg shadow-sm"><Eye className="w-4 h-4" /></button>
                                                     <button onClick={() => { setEditingUser(user); setFormData({ ...user }); setShowAddForm(true); }} className="p-2 text-gray-400 hover:text-indigo-600 bg-white border border-gray-100 hover:border-indigo-200 rounded-lg shadow-sm"><Edit2 className="w-4 h-4" /></button>
                                                     <button onClick={() => handleDelete(user.id)} className="p-2 text-gray-400 hover:text-red-600 bg-white border border-gray-100 hover:border-red-200 rounded-lg shadow-sm"><Trash2 className="w-4 h-4" /></button>
@@ -421,18 +470,26 @@ export default function AdminWaitlist() {
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Instagram</label>
-                                            <input name="instagram" value={formData.instagram || ''} onChange={handleInputChange} className="w-full p-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#2008b9]" />
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Instagram ID</label>
+                                            <div className="flex gap-2">
+                                                <input name="instagram" value={formData.instagram || ''} onChange={handleInputChange} className="flex-1 p-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#2008b9]" />
+                                                {formData.instagram && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setAnalysisUser({ instagram: formData.instagram });
+                                                            setShowAnalysisModal(true);
+                                                        }}
+                                                        className="px-4 py-2 bg-[#2008b9]/10 text-[#2008b9] font-medium rounded-xl hover:bg-[#2008b9]/20 transition-colors flex items-center gap-2"
+                                                    >
+                                                        <BarChart2 className="w-4 h-4" />
+                                                        Analyse
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">Followers</label>
-                                                <input name="followers" value={formData.followers || ''} onChange={handleInputChange} className="w-full p-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#2008b9]" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">Engagement (%)</label>
-                                                <input name="engagement" value={formData.engagement || ''} onChange={handleInputChange} className="w-full p-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#2008b9]" />
-                                            </div>
+                                            {/* Followers and Engagement removed as they are fetched from API directly */}
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
@@ -652,24 +709,15 @@ export default function AdminWaitlist() {
                                         </div>
 
                                         <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-50 space-y-3">
-                                            <div className="flex justify-between items-center">
-                                                <p className="text-xs text-gray-400 font-medium">Followers</p>
-                                                <p className="font-bold text-[#343C6A] text-lg">{viewingUser.followers || '-'}</p>
-                                            </div>
-                                            <div className="flex justify-between items-center">
-                                                <p className="text-xs text-gray-400 font-medium">Engagement Rate</p>
-                                                <p className="font-bold text-[#343C6A] text-lg">{viewingUser.engagement ? `${viewingUser.engagement}%` : '-'}</p>
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <p className="text-xs text-gray-400 font-medium mb-1">Campaign Preferences</p>
-                                            <div className="flex gap-2">
-                                                {viewingUser.campaignTypes ? (
-                                                    <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded-md text-sm font-medium capitalize">
-                                                        {viewingUser.campaignTypes === 'both' ? 'Paid & Gifted' : viewingUser.campaignTypes}
-                                                    </span>
-                                                ) : <span className="text-gray-400 italic">Not set</span>}
+                                            <div>
+                                                <p className="text-xs text-gray-400 font-medium mb-1">Campaign Preferences</p>
+                                                <div className="flex gap-2">
+                                                    {viewingUser.campaignTypes ? (
+                                                        <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded-md text-sm font-medium capitalize">
+                                                            {viewingUser.campaignTypes === 'both' ? 'Paid & Gifted' : viewingUser.campaignTypes}
+                                                        </span>
+                                                    ) : <span className="text-gray-400 italic">Not set</span>}
+                                                </div>
                                             </div>
                                         </div>
                                     </>
@@ -751,6 +799,28 @@ export default function AdminWaitlist() {
                                     </p>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Analysis Modal */}
+            {showAnalysisModal && analysisUser && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto custom-scrollbar relative">
+                        <div className="sticky top-0 bg-white z-10 p-6 border-b border-gray-100 flex justify-between items-center">
+                            <div>
+                                <h3 className="text-2xl font-bold text-[#343C6A]">Instagram Analysis</h3>
+                                <p className="text-gray-500 text-sm">Real-time data for @{analysisUser.instagram}</p>
+                            </div>
+                            <button
+                                onClick={() => setShowAnalysisModal(false)}
+                                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-8">
+                            <InstagramStats predefinedUsername={analysisUser.instagram} />
                         </div>
                     </div>
                 </div>

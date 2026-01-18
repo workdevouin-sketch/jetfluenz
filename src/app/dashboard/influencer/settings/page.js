@@ -44,9 +44,46 @@ export default function InfluencerSettings() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            const storedUser = JSON.parse(localStorage.getItem('jetfluenz_user'));
+            let updatedData = { ...formData };
+
+            // 1. Fetch Profile Picture if Instagram ID is present
+            if (updatedData.instagram) {
+                try {
+                    // Handle both full URL and handle
+                    let handle = updatedData.instagram;
+                    if (handle.includes('instagram.com')) {
+                        const url = new URL(handle.startsWith('http') ? handle : `https://${handle}`);
+                        const parts = url.pathname.split('/').filter(Boolean);
+                        handle = parts[0] || handle;
+                    }
+                    handle = handle.replace(/\/$/, '');
+
+                    const res = await fetch(`/api/meta/business-discovery?username=${handle}`);
+                    const metaData = await res.json();
+
+                    if (metaData?.business_discovery) {
+                        if (metaData.business_discovery.profile_picture_url) {
+                            updatedData.image = metaData.business_discovery.profile_picture_url;
+                        }
+                        if (metaData.business_discovery.followers_count) {
+                            // Format: e.g. 1500 -> 1.5k if desired, or keep raw number. 
+                            // Input field is text, so raw number or formatted string works.
+                            // Let's store raw number for now or formatted? The placeholder says "10k"
+                            const count = metaData.business_discovery.followers_count;
+                            updatedData.followers = count >= 1000000 ? (count / 1000000).toFixed(1) + 'M' : count >= 1000 ? (count / 1000).toFixed(1) + 'k' : count.toString();
+                        }
+                        setFormData(prev => ({ ...prev, image: updatedData.image, followers: updatedData.followers }));
+                    }
+                } catch (metaErr) {
+                    console.error("Failed to auto-fetch profile pic:", metaErr);
+                    // Continue saving even if fetch fails
+                }
+            }
+
+            const storedUser = JSON.parse(localStorage.getItem('jetfluenz_influencer_session'));
             const docRef = doc(db, 'users', storedUser.id);
-            await updateDoc(docRef, formData);
+            await updateDoc(docRef, updatedData);
+            setUserData(prev => ({ ...prev, ...updatedData })); // Keep local state in sync
 
             // Also update main user doc to keep them in sync if needed, 
             // but primarily dashboard uses 'influencers' collection now.
@@ -100,10 +137,10 @@ export default function InfluencerSettings() {
                         <div className="relative">
                             <div className="w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-100 flex items-center justify-center">
                                 {/* Placeholder or Actual Image */}
-                                {userData?.image ? (
-                                    <img src={userData.image} alt="Profile" className="w-full h-full object-cover" />
+                                {formData.image || userData?.image ? (
+                                    <img src={formData.image || userData?.image} alt="Profile" className="w-full h-full object-cover" />
                                 ) : (
-                                    <span className="text-4xl font-bold text-gray-300">{userData?.name?.[0]}</span>
+                                    <span className="text-4xl font-bold text-gray-300">{formData.name?.[0] || userData?.name?.[0]}</span>
                                 )}
                             </div>
                             <button className="absolute bottom-2 right-0 bg-[#2008b9] text-white p-2 rounded-full shadow-md hover:bg-blue-700 transition-colors">
@@ -120,13 +157,10 @@ export default function InfluencerSettings() {
                         <InputField label="Email" name="email" value={formData.email || ''} onChange={handleChange} disabled type="email" />
                         <InputField label="Phone" name="phone" value={formData.phone || ''} onChange={handleChange} placeholder="+1 234..." />
 
-                        <InputField label="Instagram URL" name="instagram" value={formData.instagram || ''} onChange={handleChange} placeholder="https://instagram.com/..." />
+                        <InputField label="Instagram ID" name="instagram" value={formData.instagram || ''} onChange={handleChange} placeholder="@username" disabled />
                         <InputField label="Portfolio / Media Kit" name="portfolio" value={formData.portfolio || ''} onChange={handleChange} placeholder="https://..." />
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <InputField label="Followers" name="followers" value={formData.followers || ''} onChange={handleChange} placeholder="10k" />
-                            <InputField label="Engagement (%)" name="engagement" value={formData.engagement || ''} onChange={handleChange} placeholder="4.5%" />
-                        </div>
+                        {/* Followers and Engagement removed as they are fetched from API directly */}
                         <div className="grid grid-cols-2 gap-4">
                             <InputField label="Age Group" name="age" value={formData.age || ''} onChange={handleChange} placeholder="18-24" />
                             <InputField label="Location" name="location" value={formData.location || ''} onChange={handleChange} placeholder="City, Country" />

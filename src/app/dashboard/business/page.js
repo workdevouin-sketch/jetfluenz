@@ -5,9 +5,11 @@ import DashboardLayout from '../../../components/dashboard/DashboardLayout';
 import { Plus, BarChart3, Users, DollarSign, Calendar, ArrowRight } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
+import { getBusinessCampaigns } from '../../../lib/campaigns';
 
 export default function BusinessDashboard() {
     const [userData, setUserData] = useState(null);
+    const [campaigns, setCampaigns] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -20,6 +22,12 @@ export default function BusinessDashboard() {
 
                     if (docSnap.exists()) {
                         setUserData(docSnap.data());
+                    }
+
+                    // Fetch Campaigns
+                    const campRes = await getBusinessCampaigns(storedUser.id);
+                    if (campRes.success) {
+                        setCampaigns(campRes.campaigns);
                     }
                 }
             } catch (error) {
@@ -59,15 +67,50 @@ export default function BusinessDashboard() {
                     <StatCard icon={Users} label="Total Reach" value="2.4M" color="bg-purple-100" textColor="text-purple-600" />
                 </div>
 
-                {/* Previous Campaigns List */}
+                {/* Accepted Collaborations Section */}
+                <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
+                    <h3 className="text-xl font-bold text-[#343C6A] mb-6">Accepted Collaborations</h3>
+                    {campaigns.filter(c => c.status === 'accepted').length === 0 ? (
+                        <p className="text-gray-400 text-sm">No accepted collaborations yet.</p>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full min-w-[700px]">
+                                <thead>
+                                    <tr className="border-b border-gray-100">
+                                        <th className="text-left py-4 px-4 text-gray-400 font-medium text-sm">Campaign Name</th>
+                                        <th className="text-left py-4 px-4 text-gray-400 font-medium text-sm">Influencer</th>
+                                        <th className="text-left py-4 px-4 text-gray-400 font-medium text-sm">Budget</th>
+                                        <th className="text-left py-4 px-4 text-gray-400 font-medium text-sm">Accepted Date</th>
+                                        <th className="text-left py-4 px-4 text-gray-400 font-medium text-sm">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50">
+                                    {campaigns.filter(c => c.status === 'accepted').map(campaign => (
+                                        <tr key={campaign.id} className="group hover:bg-gray-50/50 transition-colors">
+                                            <td className="py-4 px-4 font-bold text-[#343C6A]">{campaign.title}</td>
+                                            <td className="py-4 px-4 text-[#2008b9] font-medium">{campaign.assignedTo?.name || 'Influencer'}</td>
+                                            <td className="py-4 px-4 text-gray-600 font-medium">${campaign.budget}</td>
+                                            <td className="py-4 px-4 text-gray-500 text-sm">
+                                                {campaign.acceptedAt ? new Date(campaign.acceptedAt.seconds * 1000).toLocaleDateString() : 'Just now'}
+                                            </td>
+                                            <td className="py-4 px-4">
+                                                <button className="text-sm border border-[#2008b9] text-[#2008b9] px-3 py-1 rounded-lg hover:bg-[#2008b9] hover:text-white transition-colors">
+                                                    Start Work
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+
+                {/* All Campaigns List */}
                 <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
                     <div className="flex items-center justify-between mb-8">
-                        <h3 className="text-xl font-bold text-[#343C6A]">Previous Campaigns</h3>
-                        <button className="text-[#2008b9] font-medium hover:underline flex items-center gap-1">
-                            View All <ArrowRight className="w-4 h-4" />
-                        </button>
+                        <h3 className="text-xl font-bold text-[#343C6A]">All Campaigns</h3>
                     </div>
-
                     <div className="overflow-x-auto">
                         <table className="w-full min-w-[700px]">
                             <thead>
@@ -75,32 +118,20 @@ export default function BusinessDashboard() {
                                     <th className="text-left py-4 px-4 text-gray-400 font-medium text-sm">Campaign Name</th>
                                     <th className="text-left py-4 px-4 text-gray-400 font-medium text-sm">Status</th>
                                     <th className="text-left py-4 px-4 text-gray-400 font-medium text-sm">Budget</th>
-                                    <th className="text-left py-4 px-4 text-gray-400 font-medium text-sm">Influencers</th>
-                                    <th className="text-left py-4 px-4 text-gray-400 font-medium text-sm">Duration</th>
+                                    <th className="text-left py-4 px-4 text-gray-400 font-medium text-sm">Assigned To</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
-                                <CampaignRow
-                                    name="Summer Glow 2025"
-                                    status="Active"
-                                    budget="$5,000"
-                                    influencers="12"
-                                    date="Jan 15 - Feb 15"
-                                />
-                                <CampaignRow
-                                    name="Holiday Special"
-                                    status="Completed"
-                                    budget="$15,000"
-                                    influencers="25"
-                                    date="Dec 01 - Dec 31"
-                                />
-                                <CampaignRow
-                                    name="Product Launch: Zen"
-                                    status="Draft"
-                                    budget="$2,000"
-                                    influencers="-"
-                                    date="Not scheduled"
-                                />
+                                {campaigns.map(campaign => (
+                                    <CampaignRow
+                                        key={campaign.id}
+                                        name={campaign.title}
+                                        status={campaign.status}
+                                        budget={`$${campaign.budget}`}
+                                        influencers={campaign.assignedTo?.name || '-'}
+                                        date={new Date(campaign.createdAt?.seconds * 1000).toLocaleDateString()}
+                                    />
+                                ))}
                             </tbody>
                         </table>
                     </div>
@@ -123,10 +154,13 @@ const StatCard = ({ icon: Icon, label, value, color, textColor }) => (
 );
 
 const CampaignRow = ({ name, status, budget, influencers, date }) => {
-    const statusColor =
-        status === 'Active' ? 'bg-green-100 text-green-600' :
-            status === 'Completed' ? 'bg-gray-100 text-gray-600' :
-                'bg-yellow-100 text-yellow-600';
+    const statusColor = (() => {
+        const s = status?.toLowerCase();
+        if (s === 'active' || s === 'accepted') return 'bg-green-100 text-green-600';
+        if (s === 'completed') return 'bg-gray-100 text-gray-600';
+        if (s === 'offered') return 'bg-blue-100 text-blue-600';
+        return 'bg-yellow-100 text-yellow-600';
+    })();
 
     return (
         <tr className="group hover:bg-gray-50/50 transition-colors">

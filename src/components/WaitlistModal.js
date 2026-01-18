@@ -14,7 +14,7 @@ export default function WaitlistModal({ isOpen, onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!email || !role) {
       setError('Please fill in email and role');
       return;
@@ -25,7 +25,7 @@ export default function WaitlistModal({ isOpen, onClose }) {
 
     try {
       const result = await addToWaitlist(email, role, instagramUrl, phoneNumber);
-      
+
       if (result.success) {
         setIsSuccess(true);
         setEmail('');
@@ -63,7 +63,7 @@ export default function WaitlistModal({ isOpen, onClose }) {
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl p-6 w-full max-w-md relative">
         {/* Close Button */}
-        <button 
+        <button
           onClick={handleClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
         >
@@ -131,15 +131,15 @@ export default function WaitlistModal({ isOpen, onClose }) {
               {role === 'influencer' && (
                 <div>
                   <label htmlFor="instagram" className="block text-sm font-medium text-gray-700 mb-2">
-                    Instagram Profile URL
+                    Instagram ID
                   </label>
                   <input
-                    type="url"
+                    type="text"
                     id="instagram"
                     value={instagramUrl}
                     onChange={(e) => setInstagramUrl(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                    placeholder="https://instagram.com/yourusername"
+                    placeholder="@yourhandle"
                   />
                 </div>
               )}
@@ -148,7 +148,7 @@ export default function WaitlistModal({ isOpen, onClose }) {
               {role === 'business' && (
                 <div>
                   <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Number 
+                    Phone Number
                   </label>
                   <input
                     type="tel"

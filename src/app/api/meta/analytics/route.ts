@@ -104,6 +104,7 @@ export async function GET(request: Request) {
         });
 
         // 1. Engagement Rate: ((Avg Engagement per post) / Followers) * 100
+        // NOTE: If followers_count is 0 or missing from API, this will inflate the rate (defaults to denominator 1).
         const avgEngagementPerPost = (totalLikes + totalComments) / mediaCount;
         const engagementRate = ((avgEngagementPerPost / followers) * 100).toFixed(2) + '%';
 
@@ -111,12 +112,11 @@ export async function GET(request: Request) {
         const conversationRate = (totalComments / mediaCount).toFixed(1); // e.g. 1.7
 
         // 3. Avg Image Likes
-        // Note: If no images, 0. Careful with raw 'IMAGE' type vs logic above. 
-        // Let's use strict filtering for this specific metric if user implies "Image" type.
-        const strictImages = mediaList.filter((m: any) => m.media_type === 'IMAGE');
+        // Including CAROUSEL_ALBUM as they are image-based carousels
+        const strictImages = mediaList.filter((m: any) => m.media_type === 'IMAGE' || m.media_type === 'CAROUSEL_ALBUM');
         const strictImageLikes = strictImages.reduce((sum: number, m: any) => sum + (m.like_count || 0), 0);
         const avgImageLikes = strictImages.length > 0
-            ? (strictImageLikes / strictImages.length).toFixed(2)
+            ? (strictImageLikes / strictImages.length).toFixed(1) // Changed to 1 decimal for consistency
             : 0;
 
         // 4. Format Efficiency

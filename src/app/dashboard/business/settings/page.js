@@ -42,7 +42,7 @@ export default function BusinessSettings() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            const storedUser = JSON.parse(localStorage.getItem('jetfluenz_user'));
+            const storedUser = JSON.parse(localStorage.getItem('jetfluenz_business_session'));
             const docRef = doc(db, 'users', storedUser.id);
             await updateDoc(docRef, formData);
             alert("Profile updated successfully!");

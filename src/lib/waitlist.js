@@ -12,7 +12,8 @@ export const addToWaitlist = async (email, role, instagramUrl = '', phoneNumber 
       submittedAt: new Date().toISOString()
     };
 
-    // Only add Instagram URL if provided and user is an influencer
+    // Only add Instagram ID if provided and user is an influencer
+    // Note: Validation is mostly handled on frontend, but we store what's passed.
     if (instagramUrl && role === 'influencer') {
       userData.instagram = instagramUrl;
     }

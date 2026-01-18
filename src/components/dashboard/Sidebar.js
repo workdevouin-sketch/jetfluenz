@@ -68,6 +68,13 @@ const Sidebar = ({ role = 'influencer' }) => {
                         if (role === 'influencer') sessionKey = 'jetfluenz_influencer_session';
 
                         localStorage.removeItem(sessionKey);
+                        // Clear cached Instagram Stats
+                        Object.keys(localStorage).forEach(key => {
+                            if (key.startsWith('jetfluenz_stats_')) {
+                                localStorage.removeItem(key);
+                            }
+                        });
+
                         // Also clear fallback just in case, or if adminAuthenticated is used
                         if (role === 'admin') localStorage.removeItem('adminAuthenticated');
 

@@ -80,15 +80,47 @@ export const assignCampaign = async (campaignId, influencerId, influencerName) =
     try {
         const campaignRef = doc(db, 'campaigns', campaignId);
 
-        // Also, usually we might want to update the status to 'active' or 'assigned'
+        // Update status to 'offered' so influencer can accept/reject
         await updateDoc(campaignRef, {
             assignedTo: { id: influencerId, name: influencerName },
-            status: 'active',
+            status: 'offered',
             assignedAt: serverTimestamp()
         });
         return { success: true };
     } catch (error) {
         console.error('Error assigning campaign:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+// Accept campaign (Influencer)
+export const acceptCampaign = async (campaignId) => {
+    try {
+        const campaignRef = doc(db, 'campaigns', campaignId);
+        await updateDoc(campaignRef, {
+            status: 'accepted',
+            acceptedAt: serverTimestamp()
+        });
+        return { success: true };
+    } catch (error) {
+        console.error('Error accepting campaign:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+// Reject campaign (Influencer)
+export const rejectCampaign = async (campaignId) => {
+    try {
+        const campaignRef = doc(db, 'campaigns', campaignId);
+        await updateDoc(campaignRef, {
+            status: 'rejected',
+            rejectedAt: serverTimestamp(),
+            // Optional: Remove assignment so it can be reassigned? 
+            // For now, keep history but status rejected.
+        });
+        return { success: true };
+    } catch (error) {
+        console.error('Error rejecting campaign:', error);
         return { success: false, error: error.message };
     }
 };

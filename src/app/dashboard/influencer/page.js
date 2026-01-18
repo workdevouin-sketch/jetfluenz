@@ -6,6 +6,7 @@ import { Check, X, ArrowRight, TrendingUp, Users, RefreshCw } from 'lucide-react
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import { getInfluencerCampaigns } from '../../../lib/campaigns';
+import InstagramStats from '../../../components/influencer/InstagramStats';
 
 export default function InfluencerDashboard() {
     const [userData, setUserData] = useState(null);
@@ -60,22 +61,22 @@ export default function InfluencerDashboard() {
                     <p className="text-gray-500 mt-1">Here's your snapshot for today.</p>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
 
-                    {/* LEFT COLUMN (2/3 width) */}
-                    <div className="lg:col-span-2 space-y-8">
+                    {/* LEFT COLUMN (3/5 width - roughly 60%) */}
+                    <div className="lg:col-span-3 space-y-8">
 
                         {/* Collaboration Requests / Assigned Campaigns */}
                         <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
                             <h3 className="text-xl font-bold text-[#343C6A] mb-6">Collaboration Requests</h3>
 
-                            {assignedCampaigns.length === 0 ? (
+                            {assignedCampaigns.filter(c => ['offered', 'active', 'assigned'].includes(c.status)).length === 0 ? (
                                 <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-2xl">
                                     <p>No active campaign requests yet.</p>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
-                                    {assignedCampaigns.filter(c => c.status === 'active').map(campaign => (
+                                    {assignedCampaigns.filter(c => ['offered', 'active', 'assigned'].includes(c.status)).map(campaign => (
                                         <div key={campaign.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-12 h-12 bg-pink-100 text-pink-500 rounded-full flex items-center justify-center font-bold text-xl">
@@ -92,10 +93,27 @@ export default function InfluencerDashboard() {
                                                     <p className="text-xs text-gray-400">Budget</p>
                                                 </div>
                                                 <div className="flex gap-2">
-                                                    <button className="w-10 h-10 rounded-full bg-green-100 text-green-500 flex items-center justify-center hover:bg-green-200 transition-colors" title="Accept">
+                                                    <button
+                                                        onClick={async () => {
+                                                            const { acceptCampaign } = await import('../../../lib/campaigns');
+                                                            await acceptCampaign(campaign.id);
+                                                            // Refresh list
+                                                            setAssignedCampaigns(prev => prev.map(c => c.id === campaign.id ? { ...c, status: 'accepted' } : c));
+                                                        }}
+                                                        className="w-10 h-10 rounded-full bg-green-100 text-green-500 flex items-center justify-center hover:bg-green-200 transition-colors"
+                                                        title="Accept"
+                                                    >
                                                         <Check className="w-5 h-5" />
                                                     </button>
-                                                    <button className="w-10 h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center hover:bg-red-200 transition-colors" title="Decline">
+                                                    <button
+                                                        onClick={async () => {
+                                                            const { rejectCampaign } = await import('../../../lib/campaigns');
+                                                            await rejectCampaign(campaign.id);
+                                                            setAssignedCampaigns(prev => prev.filter(c => c.id !== campaign.id));
+                                                        }}
+                                                        className="w-10 h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center hover:bg-red-200 transition-colors"
+                                                        title="Decline"
+                                                    >
                                                         <X className="w-5 h-5" />
                                                     </button>
                                                 </div>
@@ -106,82 +124,81 @@ export default function InfluencerDashboard() {
                             )}
                         </div>
 
+                        {/* Active Campaigns (Accepted) */}
+                        <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
+                            <h3 className="text-xl font-bold text-[#343C6A] mb-6">Active Campaigns</h3>
+
+                            {assignedCampaigns.filter(c => c.status === 'accepted').length === 0 ? (
+                                <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-2xl">
+                                    <p>No active collaborations yet.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {assignedCampaigns.filter(c => c.status === 'accepted').map(campaign => (
+                                        <div key={campaign.id} className="flex items-center justify-between p-4 bg-blue-50/50 rounded-2xl hover:bg-blue-50 transition-colors border border-blue-100">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center font-bold text-xl">
+                                                    <TrendingUp className="w-6 h-6" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-[#343C6A]">{campaign.title}</h4>
+                                                    <p className="text-sm text-gray-500">Working with {campaign.businessName}</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="px-3 py-1 bg-green-100 text-green-600 rounded-full text-xs font-bold">
+                                                    In Progress
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
                         {/* Earnings Tracker (Visual only for now) */}
                         <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
                             <h3 className="text-xl font-bold text-[#343C6A] mb-8">Earnings Tracker</h3>
-                            <div className="h-64 flex items-end justify-between px-4 sm:px-12 gap-4">
-                                {[
-                                    { month: 'Jan', height: '40%', color: 'bg-blue-100' },
-                                    { month: 'Feb', height: '30%', color: 'bg-blue-100' },
-                                    { month: 'Mar', height: '60%', color: 'bg-blue-200' },
-                                    { month: 'Apr', height: '85%', color: 'bg-gradient-to-t from-blue-500 to-purple-500' },
-                                    { month: 'May', height: '45%', color: 'bg-blue-100' },
-                                    { month: 'Jun', height: '55%', color: 'bg-blue-200' },
-                                ].map((bar, idx) => (
-                                    <div key={idx} className="flex flex-col items-center w-full max-w-[60px] group">
-                                        <div
-                                            className={`w-full rounded-t-xl transition-all duration-500 hover:opacity-80 ${bar.color}`}
-                                            style={{ height: bar.height }}
-                                        ></div>
-                                        <span className="text-xs font-medium text-gray-400 mt-3">{bar.month}</span>
-                                    </div>
-                                ))}
+                            <div className="overflow-x-auto">
+                                <table className="w-full min-w-[600px]">
+                                    <thead>
+                                        <tr className="border-b border-gray-100">
+                                            <th className="text-left py-4 px-4 text-gray-400 font-medium text-sm">Campaign</th>
+                                            <th className="text-left py-4 px-4 text-gray-400 font-medium text-sm">Date</th>
+                                            <th className="text-left py-4 px-4 text-gray-400 font-medium text-sm">Status</th>
+                                            <th className="text-right py-4 px-4 text-gray-400 font-medium text-sm">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50">
+                                        {[
+                                            { id: 1, campaign: 'Summer Glow 2025', date: 'Jan 15, 2025', status: 'Processing', amount: 1250 },
+                                            { id: 2, campaign: 'Holiday Special', date: 'Dec 28, 2024', status: 'Paid', amount: 3000 },
+                                            { id: 3, campaign: 'Tech Review Series', date: 'Dec 10, 2024', status: 'Paid', amount: 850 },
+                                        ].map((payment) => (
+                                            <tr key={payment.id} className="group hover:bg-gray-50/50 transition-colors">
+                                                <td className="py-4 px-4 font-bold text-[#343C6A]">{payment.campaign}</td>
+                                                <td className="py-4 px-4 text-gray-500 text-sm">{payment.date}</td>
+                                                <td className="py-4 px-4">
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${payment.status === 'Paid' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
+                                                        }`}>
+                                                        {payment.status}
+                                                    </span>
+                                                </td>
+                                                <td className="py-4 px-4 text-right font-bold text-[#2008b9]">+${payment.amount}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
                     </div>
 
-                    {/* RIGHT COLUMN (1/3 width) */}
-                    <div className="space-y-8">
+                    {/* RIGHT COLUMN (2/5 width - roughly 40%) */}
+                    <div className="lg:col-span-2 space-y-8">
 
-                        {/* Profile Insights */}
-                        <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
-                            <h3 className="text-xl font-bold text-[#343C6A] mb-6">Profile Insights</h3>
-
-                            <div className="space-y-6">
-                                {/* Engagement */}
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
-                                            <TrendingUp className="w-5 h-5" />
-                                        </div>
-                                        <span className="text-gray-500 font-medium">Engagement</span>
-                                    </div>
-                                    <span className="text-blue-600 font-bold">{userData?.engagement || '0%'}</span>
-                                </div>
-
-                                {/* Followers */}
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                                            <Users className="w-5 h-5" />
-                                        </div>
-                                        <span className="text-gray-500 font-medium">Followers</span>
-                                    </div>
-                                    <span className="text-blue-600 font-bold">{userData?.followers || '0'}</span>
-                                </div>
-
-                                {/* Top Categories */}
-                                <div>
-                                    <h4 className="text-sm font-medium text-gray-400 mb-3 mt-6">Niche & Focus</h4>
-                                    <div className="flex flex-wrap gap-2">
-                                        {userData?.niche ? (
-                                            <span className="px-3 py-1 bg-gray-50 text-gray-600 text-xs rounded-full font-medium border border-gray-100">
-                                                {userData.niche}
-                                            </span>
-                                        ) : (
-                                            <span className="text-xs text-gray-400">No niche set</span>
-                                        )}
-                                        {userData?.location && (
-                                            <span className="px-3 py-1 bg-gray-50 text-gray-600 text-xs rounded-full font-medium border border-gray-100">
-                                                {userData.location}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
+                        {/* Instagram Analytics Panel */}
+                        <InstagramStats predefinedUsername={userData?.instagram} />
 
                         {/* Ready for more Card */}
                         <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 text-center">
