@@ -1,13 +1,22 @@
 'use client';
 
+import { Suspense } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import ValuationStats from '@/components/influencer/ValuationStats';
 import { useSearchParams } from 'next/navigation';
 
-export default function AnalyzerPage() {
+function AnalyzerContent() {
     const searchParams = useSearchParams();
     const query = searchParams.get('q') || '';
 
+    return (
+        <div className="max-w-[1400px] mx-auto">
+            <ValuationStats key={query} predefinedUsername={query || null} />
+        </div>
+    );
+}
+
+export default function AnalyzerPage() {
     return (
         <DashboardLayout role="admin" title="Market Intelligence">
             <div className="p-8">
@@ -19,9 +28,9 @@ export default function AnalyzerPage() {
                     </div>
 
                     {/* Content Area */}
-                    <div className="max-w-[1400px] mx-auto">
-                        <ValuationStats key={query} predefinedUsername={query || null} />
-                    </div>
+                    <Suspense fallback={<div className="flex justify-center py-10">Loading analyzer...</div>}>
+                        <AnalyzerContent />
+                    </Suspense>
                 </div>
             </div>
         </DashboardLayout>

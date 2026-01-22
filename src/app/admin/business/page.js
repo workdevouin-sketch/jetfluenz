@@ -1,11 +1,12 @@
 'use client';
 
+import { Suspense } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import UsersTable from '@/components/admin/UsersTable';
 import { useAdminData } from '@/hooks/useAdminData';
 import { useSearchParams } from 'next/navigation';
 
-export default function BusinessPage() {
+function BusinessContent() {
     const { users, loading, refetch } = useAdminData();
     const searchParams = useSearchParams();
     const query = searchParams.get('q')?.toLowerCase() || '';
@@ -20,13 +21,19 @@ export default function BusinessPage() {
         );
     });
 
+    if (loading) {
+        return <div className="flex justify-center items-center h-64 text-gray-400">Loading...</div>;
+    }
+
+    return <UsersTable users={filteredUsers} role="business" onRefetch={refetch} />;
+}
+
+export default function BusinessPage() {
     return (
         <DashboardLayout role="admin" title="Business">
-            {loading ? (
-                <div className="flex justify-center items-center h-64 text-gray-400">Loading...</div>
-            ) : (
-                <UsersTable users={filteredUsers} role="business" onRefetch={refetch} />
-            )}
+            <Suspense fallback={<div className="flex justify-center items-center h-64 text-gray-400">Loading search...</div>}>
+                <BusinessContent />
+            </Suspense>
         </DashboardLayout>
     );
 }

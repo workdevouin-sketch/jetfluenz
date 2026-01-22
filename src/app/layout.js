@@ -3,6 +3,12 @@ import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
+export const viewport = {
+  themeColor: '#1F07BA',
+  width: 'device-width',
+  initialScale: 1,
+}
+
 export const metadata = {
   title: 'Jetfluenz — Micro-Influencer Marketing Platform for Startups & Small Businesses',
   description: 'Jetfluenz connects micro-influencers (<10K followers) with startups and small businesses to run affordable, targeted marketing campaigns. Discover influencers, launch collaborations, and grow your brand.',
@@ -12,8 +18,6 @@ export const metadata = {
     apple: '/logo.png',
   },
   manifest: '/manifest.json',
-  themeColor: '#1F07BA',
-  viewport: 'width=device-width, initial-scale=1',
   keywords: [
     'micro influencer platform',
     'micro influencer marketing',
