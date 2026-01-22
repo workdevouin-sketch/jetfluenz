@@ -343,7 +343,7 @@ export default function InstagramStats({ predefinedUsername, userId, initialStat
                     Top Performing Content <span className="text-gray-300 text-xs">ⓘ</span>
                 </h4>
                 <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
-                    {data.profile.media.data.slice(0, 5).map((media) => (
+                    {(data.profile.media?.data || []).slice(0, 5).map((media) => (
                         <a
                             key={media.id}
                             href={media.permalink}

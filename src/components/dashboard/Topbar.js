@@ -1,8 +1,24 @@
 'use client';
 
 import { Search, Settings, Bell } from 'lucide-react';
+import { useSearchParams, usePathname, useRouter } from 'next/navigation';
+import { useDebouncedCallback } from '@/hooks/useDebounce';
 
 const Topbar = ({ title = 'Dashboard' }) => {
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
+    const { replace } = useRouter();
+
+    const handleSearch = useDebouncedCallback((term) => {
+        const params = new URLSearchParams(searchParams);
+        if (term) {
+            params.set('q', term);
+        } else {
+            params.delete('q');
+        }
+        replace(`${pathname}?${params.toString()}`);
+    }, 300);
+
     return (
         <header className="h-24 bg-white md:bg-gray-50/50 flex items-center justify-between px-8 border-b md:border-none border-gray-100">
             {/* Page Title */}
@@ -17,6 +33,8 @@ const Topbar = ({ title = 'Dashboard' }) => {
                         type="text"
                         placeholder="Search for something"
                         className="bg-transparent border-none outline-none ml-3 text-sm text-gray-600 w-full placeholder-gray-400"
+                        onChange={(e) => handleSearch(e.target.value)}
+                        defaultValue={searchParams.get('q')?.toString()}
                     />
                 </div>
 

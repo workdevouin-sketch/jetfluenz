@@ -13,9 +13,11 @@ const Sidebar = ({ role = 'influencer' }) => {
     if (role === 'admin') {
         const adminPath = '/admin';
         navItems = [
-            { name: 'Influencers', href: `${adminPath}?tab=influencers`, icon: Users },
-            { name: 'Business', href: `${adminPath}?tab=business`, icon: Briefcase },
-            { name: 'Campaigns', href: `${adminPath}?tab=campaigns`, icon: Briefcase },
+            { name: 'Influencers', href: `/admin/influencers`, icon: Users },
+            { name: 'Business', href: `/admin/business`, icon: Briefcase },
+            { name: 'Campaigns', href: `/admin/campaigns`, icon: Briefcase },
+            { name: 'Market Intelligence', href: `/admin/analyzer`, icon: LayoutGrid },
+
         ];
     } else {
         navItems = [
