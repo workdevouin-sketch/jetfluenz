@@ -1,0 +1,82 @@
+.parent {
+    width: 100%;
+    /* max-width: 500px; - Removed limit to fit grid */
+    padding: 20px;
+    perspective: 1000px;
+}
+
+.card {
+    /* padding-top: 50px; Removed to hide top bar */
+    /* border-radius: 10px; */
+    /* border: 3px solid #141414; */
+    transform-style: preserve-3d;
+
+    /* Removed striped pattern */
+    background-color: transparent;
+
+    width: 100%;
+    /* box-shadow: rgba(142, 142, 142, 0.3) 0px 30px 30px -10px; */
+    transition: all 0.5s ease-in-out;
+}
+
+.card:hover {
+    background-position: -100px 100px, -100px 100px;
+    transform: rotate3d(0.5, 1, 0, 30deg);
+}
+
+.content_box {
+    background: #ffffff;
+    /* White dashboard */
+    /* border-radius: 10px 100px 10px 10px; */
+    transition: all 0.5s ease-in-out;
+    padding: 30px;
+    transform-style: preserve-3d;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.content_box .card_content {
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #141414;
+    transition: all 0.5s ease-in-out;
+    transform: translate3d(0px, 0px, 30px);
+}
+
+.content_box .card_content:hover {
+    transform: translate3d(0px, 0px, 60px);
+}
+
+.date_box {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    height: 60px;
+    width: 60px;
+    background: #141414;
+    border: 2px solid #ff5757;
+    /* Brand Red Accent */
+    /* border-radius: 10px; */
+    padding: 10px;
+    transform: translate3d(0px, 0px, 80px);
+    box-shadow: rgba(100, 100, 111, 0.2) 0px 17px 10px -10px;
+}
+
+.date_box span {
+    display: block;
+    text-align: center;
+}
+
+.date_box .month {
+    color: #ff5757;
+    /* Brand Red */
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.date_box .date {
+    font-size: 22px;
+    font-weight: 900;
+    color: #ff5757;
+    /* Brand Red */
+}

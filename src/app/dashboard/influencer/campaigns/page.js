@@ -3,14 +3,14 @@
 import DashboardLayout from '../../../../components/dashboard/DashboardLayout';
 import { Search, Filter, Briefcase, MapPin, DollarSign, Clock, CheckCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { getAllCampaigns, applyToCampaign } from '../../../../lib/campaigns';
+import { getAllCampaigns, applyToCampaign, acceptCampaign, rejectCampaign } from '../../../../lib/campaigns';
 
 export default function InfluencerCampaigns() {
     const [activeTab, setActiveTab] = useState('browse');
     const [campaigns, setCampaigns] = useState([]);
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
-    const [applying, setApplying] = useState(null);
+    const [actionLoading, setActionLoading] = useState(null); // campaignId check for loading
 
     useEffect(() => {
         // Load user from local storage
@@ -34,7 +34,7 @@ export default function InfluencerCampaigns() {
         if (!user) return alert('Please log in to apply.');
         if (!confirm(`Apply for "${campaign.title}"?`)) return;
 
-        setApplying(campaign.id);
+        setActionLoading(campaign.id);
         try {
             const res = await applyToCampaign(campaign.id, {
                 id: user.id,
@@ -43,34 +43,61 @@ export default function InfluencerCampaigns() {
             });
 
             if (res.success) {
-                alert('Application submitted! The business will review your profile.');
-                fetchCampaigns(); // Refresh to update status
+                alert('Application submitted!');
+                fetchCampaigns();
             } else {
                 alert('Failed to apply: ' + res.error);
             }
         } finally {
-            setApplying(null);
+            setActionLoading(null);
+        }
+    };
+
+    const handleAccept = async (campaign) => {
+        if (!confirm(`Accept offer for "${campaign.title}"?`)) return;
+        setActionLoading(campaign.id);
+        try {
+            const res = await acceptCampaign(campaign.id);
+            if (res.success) {
+                alert('Offer Accepted!');
+                fetchCampaigns();
+            } else {
+                alert('Failed: ' + res.error);
+            }
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleReject = async (campaign) => {
+        if (!confirm(`Reject offer for "${campaign.title}"?`)) return;
+        setActionLoading(campaign.id);
+        try {
+            const res = await rejectCampaign(campaign.id);
+            if (res.success) {
+                fetchCampaigns();
+            }
+        } finally {
+            setActionLoading(null);
         }
     };
 
     // Filter campaigns
     const activeCampaigns = campaigns.filter(c => c.status === 'active');
+    const myApplications = campaigns.filter(c => (c.applicants || []).some(app => app.id === user?.id));
+    const myOffers = campaigns.filter(c => c.status === 'offered' && c.assignedTo?.id === user?.id);
 
-    // For "My Applications", we filter campaigns where the user is in the applicants list
-    const myApplications = campaigns.filter(c =>
-        (c.applicants || []).some(app => app.id === user?.id)
-    );
-
-    const displayedCampaigns = activeTab === 'browse'
-        ? activeCampaigns.filter(c => !(c.applicants || []).some(app => app.id === user?.id)) // Show only ones NOT applied to yet? Or valid ones. Let's show all active, but mark applied. actually prompt implies "Accept" workflow. Let's show unapplied ones in Browse.
-        : myApplications;
+    let displayedCampaigns = [];
+    if (activeTab === 'browse') displayedCampaigns = activeCampaigns.filter(c => !(c.applicants || []).some(app => app.id === user?.id));
+    if (activeTab === 'applications') displayedCampaigns = myApplications;
+    if (activeTab === 'offers') displayedCampaigns = myOffers;
 
     return (
         <DashboardLayout role="influencer" title="Campaigns">
             {/* Tabs & Search */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div className="flex items-center space-x-6 border-b border-gray-200 w-full md:w-auto overflow-x-auto">
-                    {['browse', 'applications'].map((tab) => (
+                    {['browse', 'applications', 'offers'].map((tab) => (
                         <button
                             key={tab}
                             className={`pb-3 px-2 text-base font-medium transition-all capitalize border-b-2 whitespace-nowrap ${activeTab === tab
@@ -79,7 +106,7 @@ export default function InfluencerCampaigns() {
                                 }`}
                             onClick={() => setActiveTab(tab)}
                         >
-                            {tab === 'browse' ? 'Browse Opportunities' : 'My Applications'}
+                            {tab === 'browse' ? 'Browse Opportunities' : tab === 'applications' ? 'My Applications' : 'My Offers'}
                         </button>
                     ))}
                 </div>
@@ -111,8 +138,10 @@ export default function InfluencerCampaigns() {
                             campaign={campaign}
                             user={user}
                             onApply={handleApply}
-                            applying={applying === campaign.id}
-                            isApplied={activeTab === 'applications'}
+                            onAccept={handleAccept}
+                            onReject={handleReject}
+                            loading={actionLoading === campaign.id}
+                            type={activeTab}
                         />
                     ))}
                 </div>
@@ -121,10 +150,30 @@ export default function InfluencerCampaigns() {
     );
 }
 
-const CampaignCard = ({ campaign, user, onApply, applying, isApplied }) => {
-    // Check if user accepted/applied
-    const application = (campaign.applicants || []).find(a => a.id === user?.id);
-    const status = application ? application.status : null; // 'accepted' usually
+const CampaignCard = ({ campaign, user, onApply, onAccept, onReject, loading, type }) => {
+
+    // Status Badge Logic
+    let statusBadge = null;
+
+    if (type === 'applications') {
+        const application = (campaign.applicants || []).find(a => a.id === user?.id);
+        const status = application?.status || 'Applied';
+        statusBadge = (
+            <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                {status}
+            </span>
+        );
+    } else if (type === 'offers') {
+        statusBadge = (
+            <span className="bg-purple-100 text-purple-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                Special Offer
+            </span>
+        );
+    } else {
+        statusBadge = (
+            <span className="bg-blue-50 text-blue-600 text-xs font-bold px-2 py-1 rounded-full">{campaign.status}</span>
+        );
+    }
 
     return (
         <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow group flex flex-col h-full">
@@ -138,13 +187,7 @@ const CampaignCard = ({ campaign, user, onApply, applying, isApplied }) => {
                         <p className="text-xs text-gray-500">{campaign.goal || 'Campaign'}</p>
                     </div>
                 </div>
-                {isApplied ? (
-                    <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                        <CheckCircle className="w-3 h-3" /> Accepted
-                    </span>
-                ) : (
-                    <span className="bg-blue-50 text-blue-600 text-xs font-bold px-2 py-1 rounded-full">{campaign.status}</span>
-                )}
+                {statusBadge}
             </div>
 
             <h4 className="font-bold text-lg text-gray-800 mb-2 group-hover:text-[#2008b9] transition-colors line-clamp-1">{campaign.title}</h4>
@@ -165,17 +208,37 @@ const CampaignCard = ({ campaign, user, onApply, applying, isApplied }) => {
                 )}
             </div>
 
-            {!isApplied ? (
+            {type === 'browse' && (
                 <button
                     onClick={() => onApply(campaign)}
-                    disabled={applying}
-                    className="w-full py-3 rounded-xl border border-[#2008b9] text-[#2008b9] font-bold hover:bg-[#2008b9] hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={loading}
+                    className="w-full py-3 rounded-xl border border-[#2008b9] text-[#2008b9] font-bold hover:bg-[#2008b9] hover:text-white transition-all disabled:opacity-50"
                 >
-                    {applying ? 'Accepting...' : 'Accept Collaboration'}
+                    {loading ? 'Applying...' : 'Apply Now'}
                 </button>
-            ) : (
+            )}
+
+            {type === 'offers' && (
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => onReject(campaign)}
+                        disabled={loading}
+                        className="flex-1 py-3 rounded-xl border border-red-200 text-red-600 font-bold hover:bg-red-50 transition-all disabled:opacity-50"
+                    >
+                        {loading ? '...' : 'Reject'}
+                    </button>
+                    <button
+                        onClick={() => onAccept(campaign)}
+                        disabled={loading}
+                        className="flex-1 py-3 rounded-xl bg-[#2008b9] text-white font-bold hover:bg-blue-800 transition-all disabled:opacity-50"
+                    >
+                        {loading ? 'Accepting...' : 'Accept Offer'}
+                    </button>
+                </div>
+            )}
+            {type === 'applications' && (
                 <button disabled className="w-full py-3 rounded-xl bg-gray-100 text-gray-400 font-bold border border-transparent cursor-default">
-                    Collaboration Accepted
+                    View Status
                 </button>
             )}
         </div>

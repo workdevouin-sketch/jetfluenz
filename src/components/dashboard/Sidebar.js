@@ -33,7 +33,7 @@ const Sidebar = ({ role = 'influencer' }) => {
             {/* Logo Area */}
             <div className="p-8 flex items-center">
                 <Link href="/" className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-[#2008b9]">Jetfluenz.</span>
+                    <img src="/logo.png" alt="Jetfluenz" className="h-20 w-auto" />
                 </Link>
             </div>
 

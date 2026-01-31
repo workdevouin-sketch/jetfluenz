@@ -189,7 +189,7 @@ export default function InstagramAnalyticsPage() {
                                 color="pink"
                             />
                             <StatCard
-                                icon={<Calendar className="text-orange-400" />}
+                                icon={<Calendar className="text-[#ff5757]" />}
                                 label="Posting Freq"
                                 value={data.metrics.posting_frequency}
                                 subtext="Avg days between posts"

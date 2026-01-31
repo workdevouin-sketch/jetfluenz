@@ -28,6 +28,18 @@
     margin-bottom: 24px;
 }
 
+.tileImage {
+    width: 100%;
+    height: auto;
+    max-height: 180px;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.featureCard:hover .tileImage {
+    transform: scale(1.05);
+}
+
 .connectSvg {
     width: 180px;
     overflow: visible;

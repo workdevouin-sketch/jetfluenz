@@ -7,7 +7,9 @@ import ConnectTile from '../components/solution-tiles/ConnectTile'
 import LaunchTile from '../components/solution-tiles/LaunchTile'
 import MatchTile from '../components/solution-tiles/MatchTile'
 import TrackTile from '../components/solution-tiles/TrackTile'
+import DashboardCard from '@/components/landing/DashboardCard';
 import { Analytics } from "@vercel/analytics/next"
+import ForWhomCard from '../components/landing/ForWhomCard'
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true)
@@ -238,7 +240,7 @@ export default function Home() {
                   onClick={() => setIsWaitlistModalOpen(true)}
                   className="bg-white text-gray-800 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold hover:bg-gray-50 transition-all duration-300 shadow-lg animate-fade-in-up relative overflow-hidden group border-2 border-transparent hover:border-white/30" style={{ animationDelay: '0.4s', opacity: 0 }}>
                   <span className="relative z-10">Join the waitlist</span>
-                  <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-orange-400 transition-all duration-500 animate-border-travel"></div>
+                  <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-[#ff5757] transition-all duration-500 animate-border-travel"></div>
                 </button>
               </div>
 
@@ -282,101 +284,51 @@ export default function Home() {
           <div className="container mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-6xl font-bold text-black relative inline-block">
-                For Whom<span className="text-orange-500">?</span>
+                For Whom<span className="text-[#ff5757]">?</span>
               </h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
 
               {/* Business Card */}
-              <div className="bg-white rounded-[2rem] shadow-soft overflow-hidden hover:scale-105 transition-transform duration-300 group border border-gray-100">
-                <div className="bg-[#2008b9] h-72 p-8 flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 bg-blue-600/20 rounded-full blur-3xl transform scale-150 translate-x-1/2 translate-y-1/2"></div>
-                  <img
-                    src="/business.png"
-                    alt="Business"
-                    className="w-full h-full object-contain relative z-10 drop-shadow-lg"
-                    style={{ filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.2))' }}
-                  />
-                </div>
-                <div className="p-8">
-                  <h3 className="text-3xl font-bold mb-6 text-black">Business</h3>
-                  <ul className="space-y-3">
-                    <li className="flex items-start">
-                      <span className="text-orange-500 mr-2 text-xl">•</span>
-                      <span className="text-gray-600 font-medium">Scale brand reach with authentic partnerships</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-orange-500 mr-2 text-xl">•</span>
-                      <span className="text-gray-600 font-medium">Cost-effective campaigns with measurable ROI</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-orange-500 mr-2 text-xl">•</span>
-                      <span className="text-gray-600 font-medium">Real engagement that converts</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
+              <ForWhomCard
+                title="Business"
+                description="Scale your brand reach with authentic partnerships and measurable ROI."
+                benefits={[
+                  "Scale brand reach with authentic partnerships",
+                  "Cost-effective campaigns with measurable ROI",
+                  "Real engagement that converts"
+                ]}
+                buttonText="Start Hiring"
+                onButtonClick={() => setIsWaitlistModalOpen(true)}
+              />
 
               {/* Startups Card */}
-              <div className="bg-white rounded-[2rem] shadow-soft overflow-hidden hover:scale-105 transition-transform duration-300 group border border-gray-100">
-                <div className="bg-[#2008b9] h-72 p-8 flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 bg-blue-600/20 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2"></div>
-                  <img
-                    src="/startups.png"
-                    alt="Startups"
-                    className="w-full h-full object-contain relative z-10 drop-shadow-lg"
-                    style={{ filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.2))' }}
-                  />
-                </div>
-                <div className="p-8">
-                  <h3 className="text-3xl font-bold mb-6 text-black">Startups</h3>
-                  <ul className="space-y-3">
-                    <li className="flex items-start">
-                      <span className="text-orange-500 mr-2 text-xl">•</span>
-                      <span className="text-gray-600 font-medium">Launch products with targeted buzz</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-orange-500 mr-2 text-xl">•</span>
-                      <span className="text-gray-600 font-medium">Limited budgets maximum impact</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-orange-500 mr-2 text-xl">•</span>
-                      <span className="text-gray-600 font-medium">Quick awareness building</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
+              <ForWhomCard
+                title="Startups"
+                description="Launch products with targeted buzz and maximum impact on a limited budget."
+                benefits={[
+                  "Launch products with targeted buzz",
+                  "Limited budgets maximum impact",
+                  "Quick awareness building",
+                  "Connect with early adopters instantly"
+                ]}
+                buttonText="Get Early Access"
+                onButtonClick={() => setIsWaitlistModalOpen(true)}
+              />
 
               {/* Micro-Influencers Card */}
-              <div className="bg-white rounded-[2rem] shadow-soft overflow-hidden hover:scale-105 transition-transform duration-300 group border border-gray-100">
-                <div className="bg-[#2008b9] h-72 p-8 flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 bg-blue-600/20 rounded-full blur-3xl transform translate-y-1/2"></div>
-                  <img
-                    src="/infulencers.png"
-                    alt="Micro-Influencers"
-                    className="w-full h-full object-contain relative z-10 drop-shadow-lg"
-                    style={{ filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.2))' }}
-                  />
-                </div>
-                <div className="p-8">
-                  <h3 className="text-3xl font-bold mb-6 text-black">Micro-Influencers</h3>
-                  <ul className="space-y-3">
-                    <li className="flex items-start">
-                      <span className="text-orange-500 mr-2 text-xl">•</span>
-                      <span className="text-gray-600 font-medium">Monetize content on Instagram, TikTok, YouTube</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-orange-500 mr-2 text-xl">•</span>
-                      <span className="text-gray-600 font-medium">Brand partnerships that align with values</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-orange-500 mr-2 text-xl">•</span>
-                      <span className="text-gray-600 font-medium">Grow following while earning</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
+              <ForWhomCard
+                title="Micro-Influencers"
+                description="Monetize your content and grow your following with brand partnerships."
+                benefits={[
+                  "Monetize content on Instagram, TikTok, YouTube",
+                  "Brand partnerships that align with values",
+                  "Grow following while earning"
+                ]}
+                buttonText="Join as Influencer"
+                onButtonClick={() => setIsWaitlistModalOpen(true)}
+              />
 
             </div>
           </div>
@@ -387,7 +339,7 @@ export default function Home() {
           <div className="container mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-6xl font-bold text-white relative inline-block">
-                Our Solution<span className="text-orange-500">.</span>
+                Our Solution<span className="text-[#ff5757]">.</span>
               </h2>
             </div>
 
@@ -397,7 +349,7 @@ export default function Home() {
               <div className="md:col-span-2 bg-white rounded-[2rem] p-10 flex flex-col justify-between hover:scale-[1.02] transition-transform duration-300">
                 <div>
                   <h3 className="text-4xl md:text-5xl font-bold text-black mb-6">
-                    What We Do<span className="text-orange-500">?</span>
+                    What We Do<span className="text-[#ff5757]">?</span>
                   </h3>
                 </div>
                 <div>
@@ -432,110 +384,8 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
 
             {/* Left: 3D Dashboard Card */}
-            <div className="relative perspective-1000 group">
-              {/* Back card layers for stack effect */}
-              <div className="absolute inset-0 bg-white/10 rounded-xl transform translate-x-4 translate-y-4 -rotate-2"></div>
-              <div className="absolute inset-0 bg-white/20 rounded-xl transform translate-x-2 translate-y-2 -rotate-1"></div>
-
-              {/* Main Card */}
-              <div className="bg-white rounded-xl p-6 md:p-8 shadow-2xl relative z-10 animate-float transform-style-3d hover:scale-105 transition-all duration-500">
-
-                {/* Dashboard Header */}
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-xl md:text-2xl font-bold text-gray-900">Your Dashboard</h2>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
-                    <div className="w-2.5 h-2.5 bg-yellow-400 rounded-full"></div>
-                    <div className="w-2.5 h-2.5 bg-red-500 rounded-full"></div>
-                  </div>
-                </div>
-
-                {/* Metrics */}
-                <div className="grid grid-cols-3 gap-4 mb-8">
-                  <div className="text-center p-4 bg-blue-50 rounded-xl">
-                    <div className="text-3xl font-bold text-blue-600 mb-1">5</div>
-                    <div className="text-xs text-gray-500 font-medium">Active</div>
-                  </div>
-                  <div className="text-center p-4 bg-green-50 rounded-xl">
-                    <div className="text-3xl font-bold text-green-600 mb-1">12</div>
-                    <div className="text-xs text-gray-500 font-medium">Complete</div>
-                  </div>
-                  <div className="text-center p-4 bg-purple-50 rounded-xl">
-                    <div className="text-3xl font-bold text-purple-600 mb-1">3</div>
-                    <div className="text-xs text-gray-500 font-medium">Upcoming</div>
-                  </div>
-                </div>
-
-                {/* Influencer List */}
-                <div className="mb-8">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-4">Top Influencers</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-gray-50/80 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-orange-200 rounded-full flex items-center justify-center">
-                          <span className="text-orange-600 font-bold text-xs">SJ</span>
-                        </div>
-                        <div>
-                          <div className="font-bold text-gray-900 text-sm">Sarah J.</div>
-                          <div className="text-xs text-gray-500">Fashion</div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold text-gray-900 text-sm">150K</div>
-                        <div className="text-xs text-green-600 font-medium">5% rate</div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between p-3 bg-gray-50/80 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center">
-                          <span className="text-blue-600 font-bold text-xs">MR</span>
-                        </div>
-                        <div>
-                          <div className="font-bold text-gray-900 text-sm">Mike R.</div>
-                          <div className="text-xs text-gray-500">Tech</div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold text-gray-900 text-sm">80K</div>
-                        <div className="text-xs text-green-600 font-medium">7% rate</div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between p-3 bg-gray-50/80 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center">
-                          <span className="text-green-600 font-bold text-xs">AM</span>
-                        </div>
-                        <div>
-                          <div className="font-bold text-gray-900 text-sm">Alex M.</div>
-                          <div className="text-xs text-gray-500">Fitness</div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold text-gray-900 text-sm">120K</div>
-                        <div className="text-xs text-green-600 font-medium">6% rate</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom Stats */}
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center bg-gray-50 rounded-lg p-2">
-                    <div className="text-sm font-bold text-green-600">+15%</div>
-                    <div className="text-[10px] text-gray-500 text-uppercase tracking-wider">VIEWS</div>
-                  </div>
-                  <div className="text-center bg-gray-50 rounded-lg p-2">
-                    <div className="text-sm font-bold text-blue-600">+8%</div>
-                    <div className="text-[10px] text-gray-500 text-uppercase tracking-wider">LIKES</div>
-                  </div>
-                  <div className="text-center bg-gray-50 rounded-lg p-2">
-                    <div className="text-sm font-bold text-purple-600">+12%</div>
-                    <div className="text-[10px] text-gray-500 text-uppercase tracking-wider">SALES</div>
-                  </div>
-                </div>
-              </div>
+            <div className="flex items-center justify-center">
+              <DashboardCard />
             </div>
 
             {/* Right: Process Steps */}

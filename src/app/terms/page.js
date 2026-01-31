@@ -45,18 +45,34 @@ export default function TermsPage() {
                         <p>The Service and its original content, features, and functionality are and will remain the exclusive property of Jetfluenz and its licensors. The Service is protected by copyright, trademark, and other laws of both India and foreign countries.</p>
                     </section>
 
+                    <section className="bg-gray-50 border-l-4 border-gray-500 p-6 rounded-r-lg">
+                        <h2 className="text-xl font-bold text-gray-900 mb-3">5. Platform Disclaimer & Limitation of Liability</h2>
+                        <p className="mb-4">
+                            <strong>5.1 Intermediary Role:</strong> Jetfluenz acts solely as a technological platform to connect Businesses and Influencers. We are not a party to any agreement, contract, or transaction entered into between designated users.
+                        </p>
+                        <p className="mb-4">
+                            <strong>5.2 No Liability for Products:</strong> Jetfluenz assumes <strong>no responsibility or liability</strong> for the quality, safety, legality, or efficacy of any products, services, or brands promoted through the platform. Any product liability claims are solely between the Business and the Influencer/End Consumer.
+                        </p>
+                        <p className="mb-4">
+                            <strong>5.3 No Liability for Conduct:</strong> Jetfluenz is <strong>not responsible</strong> for the conduct, statements, content, or controversies associated with any Influencer or Business. Users interact at their own risk.
+                        </p>
+                        <p>
+                            <strong>5.4 Dispute Resolution:</strong> Any disputes regarding payments, deliverables, or product issues must be resolved directly between the Business and the Influencer. Jetfluenz disclaims all liability for such disputes.
+                        </p>
+                    </section>
+
                     <section>
-                        <h2 className="text-xl font-bold text-gray-900 mb-3">5. Termination</h2>
+                        <h2 className="text-xl font-bold text-gray-900 mb-3">6. Termination</h2>
                         <p>We may terminate or suspend access to our Service immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.</p>
                     </section>
 
                     <section>
-                        <h2 className="text-xl font-bold text-gray-900 mb-3">6. Changes</h2>
+                        <h2 className="text-xl font-bold text-gray-900 mb-3">7. Changes</h2>
                         <p>We reserve the right, at our sole discretion, to modify or replace these Terms at any time. If a revision is material we will try to provide at least 30 days notice prior to any new terms taking effect.</p>
                     </section>
 
                     <section>
-                        <h2 className="text-xl font-bold text-gray-900 mb-3">7. Contact Us</h2>
+                        <h2 className="text-xl font-bold text-gray-900 mb-3">8. Contact Us</h2>
                         <p>If you have any questions about these Terms, please contact us at <a href="mailto:support.jetfluenz@devou.in" className="text-blue-600 hover:underline">support.jetfluenz@devou.in</a>.</p>
                     </section>
 

@@ -6,10 +6,10 @@ export const createCampaign = async (campaignData) => {
     try {
         const data = {
             ...campaignData,
-            status: 'draft', // default status
+            status: campaignData.status || 'draft', // use provided status or default
             createdAt: serverTimestamp(),
             applicants: [],
-            assingedTo: null
+            assignedTo: null
         };
         const docRef = await addDoc(collection(db, 'campaigns'), data);
         return { success: true, id: docRef.id };

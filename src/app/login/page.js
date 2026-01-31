@@ -102,7 +102,7 @@ export default function LoginPage() {
                 <div className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full border border-white/10 -translate-x-1/2 translate-y-1/4"></div>
 
                 <div className="relative z-10 text-white">
-                    <h1 className="text-5xl font-bold mb-4">Jetfluenz.</h1>
+                    <img src="/logo.png" alt="Jetfluenz" className="h-32 mb-6" />
                     <p className="text-xl text-blue-100 max-w-md leading-relaxed">
                         connects micro-influencers with businesses to create authentic campaigns that convert.
                     </p>
