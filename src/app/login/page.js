@@ -1,18 +1,36 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Mail, Lock, Loader2 } from 'lucide-react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { getAuthErrorMessage } from '@/lib/auth/helpers';
 
 export default function LoginPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const { login, isAuthenticated, getUserDashboard, loading: authLoading } = useAuth();
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [showPasswordReset, setShowPasswordReset] = useState(false);
+
+    // Check for session expiration message
+    useEffect(() => {
+        if (searchParams.get('expired') === 'true') {
+            setError('Your session has expired. Please log in again.');
+        }
+    }, [searchParams]);
+
+    // Redirect if already authenticated
+    useEffect(() => {
+        if (!authLoading && isAuthenticated) {
+            router.push(getUserDashboard());
+        }
+    }, [isAuthenticated, authLoading, router, getUserDashboard]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -20,77 +38,36 @@ export default function LoginPage() {
         setError('');
 
         try {
-            // 1. Check for Admin Credentials (Hardcoded)
-            if (email === 'devou.in@gmail.com' && password === 'jetfluenz2026') {
-                localStorage.setItem('jetfluenz_admin_session', JSON.stringify({
-                    id: 'admin_master',
-                    role: 'admin',
-                    email: email,
-                    name: 'Admin'
-                }));
-                router.push('/admin');
-                return;
-            }
+            const result = await login(email, password);
 
-            // 2. Query User by Email (Normal Users)
-            const q = query(collection(db, 'users'), where('email', '==', email));
-            const querySnapshot = await getDocs(q);
-
-            if (querySnapshot.empty) {
-                setError('No account found with this email.');
-                setLoading(false);
-                return;
-            }
-
-            // 2. Validate Password (User ID) and Status
-            const userDoc = querySnapshot.docs[0];
-            const userData = userDoc.data();
-            const userId = userDoc.id;
-
-            if (userData.status === 'banned') {
-                setError('Your account has been banned due to violation of terms.');
-                setLoading(false);
-                return;
-            }
-
-            if (userData.status !== 'approved') {
-                setError('Your account is still pending approval.');
-                setLoading(false);
-                return;
-            }
-
-            // Expected password is the UserID (or the stored password field if we set it)
-            // We set 'password' field in createAccountForUser, so we can check that.
-            // Fallback to ID check if password field missing.
-            const validPassword = userData.password || userId;
-
-            if (password !== validPassword) {
-                setError('Incorrect password (Hint: Check your provided credentials).');
-                setLoading(false);
-                return;
-            }
-
-            // 3. Login Success
-            // Persist session to role-specific storage
-            const sessionData = { id: userId, ...userData };
-            if (userData.role === 'business') {
-                localStorage.setItem('jetfluenz_business_session', JSON.stringify(sessionData));
-                router.push('/dashboard/business');
-            } else if (userData.role === 'influencer') {
-                localStorage.setItem('jetfluenz_influencer_session', JSON.stringify(sessionData));
-                router.push('/dashboard/influencer');
+            if (result.success) {
+                // AuthContext will handle user data fetching
+                // Redirect will happen via useEffect above
+                router.push(getUserDashboard());
             } else {
-                // Fallback
-                localStorage.setItem('jetfluenz_user', JSON.stringify(sessionData));
-                router.push('/dashboard');
+                // Display user-friendly error message
+                setError(getAuthErrorMessage(result.error));
+                setLoading(false);
             }
-
         } catch (err) {
             console.error('Login Error:', err);
-            setError('An error occurred. Please try again.');
+            setError('An unexpected error occurred. Please try again.');
             setLoading(false);
         }
     };
+
+    // Don't render login form if already authenticated
+    if (authLoading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-[#2008b9]" />
+            </div>
+        );
+    }
+
+    if (isAuthenticated) {
+        return null; // Will redirect via useEffect
+    }
 
     return (
         <div className="flex min-h-screen items-stretch">
@@ -122,8 +99,9 @@ export default function LoginPage() {
 
                     <form onSubmit={handleLogin} className="space-y-6">
                         {error && (
-                            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center">
-                                {error}
+                            <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm flex items-start gap-3">
+                                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                                <span>{error}</span>
                             </div>
                         )}
 
@@ -139,6 +117,7 @@ export default function LoginPage() {
                                 placeholder="Email Address"
                                 className="w-full pl-12 pr-4 py-4 bg-white border border-gray-100 rounded-[20px] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2008b9] focus:border-transparent transition-all shadow-sm"
                                 required
+                                disabled={loading}
                             />
                         </div>
 
@@ -151,27 +130,131 @@ export default function LoginPage() {
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Password (Use Your User ID)"
+                                placeholder="Password"
                                 className="w-full pl-12 pr-4 py-4 bg-white border border-gray-100 rounded-[20px] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2008b9] focus:border-transparent transition-all shadow-sm"
                                 required
+                                disabled={loading}
                             />
                         </div>
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-[#2008b9] text-white font-bold py-4 rounded-[20px] shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 hover:bg-blue-800 transition-all transform hover:-translate-y-0.5 flex justify-center items-center disabled:opacity-70 disabled:hover:translate-y-0"
+                            className="w-full bg-[#2008b9] text-white font-bold py-4 rounded-[20px] shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 hover:bg-blue-800 transition-all transform hover:-translate-y-0.5 flex justify-center items-center disabled:opacity-70 disabled:hover:translate-y-0 disabled:cursor-not-allowed"
                         >
                             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Login'}
                         </button>
 
                         <div className="text-center">
-                            <Link href="#" className="text-gray-400 hover:text-[#2008b9] text-sm transition-colors">
-                                Forgot Password
-                            </Link>
+                            <button
+                                type="button"
+                                onClick={() => setShowPasswordReset(true)}
+                                className="text-gray-400 hover:text-[#2008b9] text-sm transition-colors"
+                            >
+                                Forgot Password?
+                            </button>
                         </div>
                     </form>
+
+                    {/* Info Box */}
+                    <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-2xl">
+                        <p className="text-sm text-gray-600">
+                            <strong>New user?</strong> Your account must be approved by an admin.
+                            Contact support if you haven't received your login credentials.
+                        </p>
+                    </div>
                 </div>
+            </div>
+
+            {/* Password Reset Modal */}
+            {showPasswordReset && (
+                <PasswordResetModal onClose={() => setShowPasswordReset(false)} />
+            )}
+        </div>
+    );
+}
+
+// Password Reset Modal Component
+function PasswordResetModal({ onClose }) {
+    const { resetPassword } = useAuth();
+    const [email, setEmail] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleReset = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+
+        const result = await resetPassword(email);
+
+        if (result.success) {
+            setSuccess(true);
+        } else {
+            setError(getAuthErrorMessage(result.error));
+        }
+        setLoading(false);
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl p-8 max-w-md w-full">
+                <h3 className="text-2xl font-bold text-[#343C6A] mb-4">Reset Password</h3>
+
+                {success ? (
+                    <div className="space-y-4">
+                        <div className="bg-green-50 text-green-600 p-4 rounded-lg text-sm">
+                            Password reset email sent! Check your inbox.
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className="w-full bg-[#2008b9] text-white font-bold py-3 rounded-xl"
+                        >
+                            Close
+                        </button>
+                    </div>
+                ) : (
+                    <form onSubmit={handleReset} className="space-y-4">
+                        {error && (
+                            <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm">
+                                {error}
+                            </div>
+                        )}
+
+                        <p className="text-gray-600 text-sm">
+                            Enter your email address and we'll send you a link to reset your password.
+                        </p>
+
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Email Address"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2008b9]"
+                            required
+                            disabled={loading}
+                        />
+
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="flex-1 border border-gray-200 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-50"
+                                disabled={loading}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                className="flex-1 bg-[#2008b9] text-white font-bold py-3 rounded-xl hover:bg-blue-800 disabled:opacity-70"
+                                disabled={loading}
+                            >
+                                {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Send Reset Link'}
+                            </button>
+                        </div>
+                    </form>
+                )}
             </div>
         </div>
     );

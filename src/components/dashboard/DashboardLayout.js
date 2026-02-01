@@ -2,34 +2,70 @@
 
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import { Loader2 } from 'lucide-react';
 
 export default function DashboardLayout({ children, role, title }) {
     const router = useRouter();
-    const [isLoading, setIsLoading] = useState(true);
+    const { user, userData, loading, isAuthenticated } = useAuth();
 
     useEffect(() => {
-        let sessionKey = 'jetfluenz_user'; // fallback
-        if (role === 'admin') sessionKey = 'jetfluenz_admin_session';
-        if (role === 'business') sessionKey = 'jetfluenz_business_session';
-        if (role === 'influencer') sessionKey = 'jetfluenz_influencer_session';
-
-        const userSession = localStorage.getItem(sessionKey);
-
-        if (!userSession) {
+        // Redirect to login if not authenticated
+        if (!loading && !isAuthenticated) {
             router.push('/login');
-        } else {
-            setIsLoading(false);
+            return;
         }
-    }, [router, role]);
 
-    if (isLoading) {
+        // Check role authorization
+        if (!loading && isAuthenticated && userData) {
+            // If role is specified, check if user has the required role
+            if (role && userData.role !== role) {
+                // Redirect to appropriate dashboard based on user's actual role
+                if (userData.role === 'admin') {
+                    router.push('/admin');
+                } else if (userData.role === 'business') {
+                    router.push('/dashboard/business');
+                } else if (userData.role === 'influencer') {
+                    router.push('/dashboard/influencer');
+                } else {
+                    router.push('/login');
+                }
+            }
+
+            // Check if account is banned
+            if (userData.status === 'banned') {
+                router.push('/login?error=banned');
+            }
+
+            // Check if account is not approved
+            if (userData.status !== 'approved' && userData.role !== 'admin') {
+                router.push('/login?error=pending');
+            }
+        }
+    }, [user, userData, loading, isAuthenticated, role, router]);
+
+    // Show loading state
+    if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+                <div className="text-center">
+                    <Loader2 className="w-12 h-12 animate-spin text-[#2008b9] mx-auto mb-4" />
+                    <p className="text-gray-500">Loading...</p>
+                </div>
             </div>
         );
+    }
+
+    // Don't render if not authenticated
+    if (!isAuthenticated || !userData) {
+        return null;
+    }
+
+    // Don't render if role mismatch
+    if (role && userData.role !== role) {
+        return null;
     }
 
     return (

@@ -3,42 +3,33 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../../components/dashboard/DashboardLayout';
 import { Plus, BarChart3, Users, DollarSign, Calendar, ArrowRight } from 'lucide-react';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../../../lib/firebase';
+import { useAuth } from '@/contexts/AuthContext';
 import { getBusinessCampaigns } from '../../../lib/campaigns';
 
 export default function BusinessDashboard() {
-    const [userData, setUserData] = useState(null);
+    const { userData } = useAuth();
     const [campaigns, setCampaigns] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchUserData = async () => {
+        const fetchCampaigns = async () => {
+            if (!userData?.id) return;
+
             try {
-                const storedUser = JSON.parse(localStorage.getItem('jetfluenz_business_session'));
-                if (storedUser?.id) {
-                    const docRef = doc(db, 'users', storedUser.id);
-                    const docSnap = await getDoc(docRef);
-
-                    if (docSnap.exists()) {
-                        setUserData(docSnap.data());
-                    }
-
-                    // Fetch Campaigns
-                    const campRes = await getBusinessCampaigns(storedUser.id);
-                    if (campRes.success) {
-                        setCampaigns(campRes.campaigns);
-                    }
+                // Fetch Campaigns
+                const campRes = await getBusinessCampaigns(userData.id);
+                if (campRes.success) {
+                    setCampaigns(campRes.campaigns);
                 }
             } catch (error) {
-                console.error("Error fetching user data:", error);
+                console.error("Error fetching campaigns:", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchUserData();
-    }, []);
+        fetchCampaigns();
+    }, [userData]);
 
     // Helper to get display name
     const getDisplayName = () => {

@@ -108,18 +108,59 @@ export const addUserFromAdmin = async (userData) => {
 };
 
 // Create Account (Approve & Initialize)
+// NOTE: This function should ideally be called from a server-side API route
+// For now, it's client-side but will create Firebase Auth users
 
 export const createAccountForUser = async (userId, userData) => {
   try {
-    // 1. Update User Status to Approved
+    // Import Firebase Auth functions (dynamic import to avoid client-side issues)
+    const { createUserWithEmailAndPassword, sendPasswordResetEmail } = await import('firebase/auth');
+    const { auth } = await import('./firebase');
+    const { generateSecurePassword } = await import('./auth/helpers');
+
+    // 1. Generate a secure random password
+    const temporaryPassword = generateSecurePassword(16);
+
+    // 2. Create Firebase Authentication user
+    let firebaseUser;
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        userData.email,
+        temporaryPassword
+      );
+      firebaseUser = userCredential.user;
+
+      // If userId from Firestore doesn't match Firebase UID, we need to handle this
+      // For now, we'll use the Firebase UID as the primary ID
+      console.log('Created Firebase Auth user:', firebaseUser.uid);
+    } catch (authError) {
+      if (authError.code === 'auth/email-already-in-use') {
+        // User already exists in Firebase Auth, that's okay
+        console.log('User already exists in Firebase Auth');
+      } else {
+        throw authError;
+      }
+    }
+
+    // 3. Update Firestore user document with approved status
     const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, {
       status: 'approved',
       approvedAt: serverTimestamp(),
-      password: userId, // Default password is the User ID
+      firebaseUid: firebaseUser?.uid || userId, // Store Firebase UID
     });
 
-    // 2. Initialize Role-Specific Dashboard Data
+    // 4. Send password reset email for user to set their own password
+    try {
+      await sendPasswordResetEmail(auth, userData.email);
+      console.log('Password reset email sent to:', userData.email);
+    } catch (emailError) {
+      console.error('Error sending password reset email:', emailError);
+      // Don't fail the entire operation if email fails
+    }
+
+    // 5. Initialize Role-Specific Dashboard Data
     // Base object with common fields
     const baseData = {
       id: userId,
@@ -165,7 +206,11 @@ export const createAccountForUser = async (userId, userData) => {
       await setDoc(doc(db, 'businesses', userId), businessData);
     }
 
-    return { success: true };
+    return {
+      success: true,
+      message: 'Account created successfully. Password reset email sent to user.',
+      temporaryPassword // Return for admin reference (don't store this!)
+    };
   } catch (error) {
     console.error('Error creating account:', error);
     return { success: false, error: error.message };

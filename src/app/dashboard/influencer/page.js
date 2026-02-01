@@ -3,44 +3,34 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../../components/dashboard/DashboardLayout';
 import { Check, X, ArrowRight, TrendingUp, Users, RefreshCw } from 'lucide-react';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../../../lib/firebase';
+import { useAuth } from '@/contexts/AuthContext';
 import { getInfluencerCampaigns } from '../../../lib/campaigns';
 import InstagramStats from '../../../components/influencer/InstagramStats';
 
 export default function InfluencerDashboard() {
-    const [userData, setUserData] = useState(null);
+    const { userData } = useAuth();
     const [assignedCampaigns, setAssignedCampaigns] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchUserData = async () => {
+        const fetchCampaigns = async () => {
+            if (!userData?.id) return;
+
             try {
-                const storedUser = JSON.parse(localStorage.getItem('jetfluenz_influencer_session'));
-                if (storedUser?.id) {
-                    // Fetch Profile
-                    const docRef = doc(db, 'users', storedUser.id);
-                    const docSnap = await getDoc(docRef);
-
-                    if (docSnap.exists()) {
-                        setUserData(docSnap.data());
-                    }
-
-                    // Fetch Assigned Campaigns
-                    const campRes = await getInfluencerCampaigns(storedUser.id);
-                    if (campRes.success) {
-                        setAssignedCampaigns(campRes.campaigns);
-                    }
+                // Fetch Assigned Campaigns
+                const campRes = await getInfluencerCampaigns(userData.id);
+                if (campRes.success) {
+                    setAssignedCampaigns(campRes.campaigns);
                 }
             } catch (error) {
-                console.error("Error fetching user data:", error);
+                console.error("Error fetching campaigns:", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchUserData();
-    }, []);
+        fetchCampaigns();
+    }, [userData]);
 
     if (loading) {
         return (

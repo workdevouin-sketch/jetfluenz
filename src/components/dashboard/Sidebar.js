@@ -62,34 +62,34 @@ const Sidebar = ({ role = 'influencer' }) => {
 
             {/* Footer / Logout */}
             <div className="p-4 mt-auto">
-                <button
-                    onClick={() => {
-                        let sessionKey = 'jetfluenz_user';
-                        if (role === 'admin') sessionKey = 'jetfluenz_admin_session';
-                        if (role === 'business') sessionKey = 'jetfluenz_business_session';
-                        if (role === 'influencer') sessionKey = 'jetfluenz_influencer_session';
-
-                        localStorage.removeItem(sessionKey);
-                        // Clear cached Instagram Stats
-                        Object.keys(localStorage).forEach(key => {
-                            if (key.startsWith('jetfluenz_stats_')) {
-                                localStorage.removeItem(key);
-                            }
-                        });
-
-                        // Also clear fallback just in case, or if adminAuthenticated is used
-                        if (role === 'admin') localStorage.removeItem('adminAuthenticated');
-
-                        window.location.href = '/login';
-                    }}
-                    className="flex items-center gap-4 px-6 py-4 text-gray-400 hover:text-red-500 hover:bg-red-50 w-full rounded-xl transition-colors"
-                >
-                    <LogOut className="w-6 h-6" />
-                    <span className="font-medium text-base">Logout</span>
-                </button>
+                <LogoutButton />
             </div>
         </aside>
     );
 };
+
+// Logout Button Component
+function LogoutButton() {
+    const { logout } = require('@/contexts/AuthContext').useAuth();
+    const [loading, setLoading] = require('react').useState(false);
+
+    const handleLogout = async () => {
+        setLoading(true);
+        await logout();
+        // Redirect will happen automatically via AuthContext
+        window.location.href = '/login';
+    };
+
+    return (
+        <button
+            onClick={handleLogout}
+            disabled={loading}
+            className="flex items-center gap-4 px-6 py-4 text-gray-400 hover:text-red-500 hover:bg-red-50 w-full rounded-xl transition-colors disabled:opacity-50"
+        >
+            <LogOut className="w-6 h-6" />
+            <span className="font-medium text-base">{loading ? 'Logging out...' : 'Logout'}</span>
+        </button>
+    );
+}
 
 export default Sidebar;
