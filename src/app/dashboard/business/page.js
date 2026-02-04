@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../../components/dashboard/DashboardLayout';
 import { Plus, BarChart3, Users, DollarSign, Calendar, ArrowRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import { getBusinessCampaigns } from '../../../lib/campaigns';
@@ -11,6 +12,7 @@ export default function BusinessDashboard() {
     const [userData, setUserData] = useState(null);
     const [campaigns, setCampaigns] = useState([]);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -55,7 +57,10 @@ export default function BusinessDashboard() {
                         <h2 className="text-3xl font-bold text-[#343C6A]">Welcome, {getDisplayName()} 👋</h2>
                         <p className="text-gray-500 mt-1">Manage your influencer campaigns.</p>
                     </div>
-                    <button className="bg-[#2008b9] text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-800 transition-all flex items-center gap-2">
+                    <button
+                        onClick={() => router.push('/dashboard/business/campaigns')}
+                        className="bg-[#2008b9] text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-800 transition-all flex items-center gap-2"
+                    >
                         <Plus className="w-5 h-5" /> Post New Campaign
                     </button>
                 </div>

@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Instagram, Users, MapPin, CheckCircle } from 'lucide-react';
+import LocationAutocomplete from './LocationAutocomplete';
+import InfoTooltip from '../ui/InfoTooltip';
+import CampaignTypeSelector from './CampaignTypeSelector';
 
 const STEPS = [
     { id: 'identity', title: 'Identity' },
@@ -77,7 +80,7 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                 </div>
                 <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
                     <motion.div
-                        className="h-full bg-gradient-to-r from-purple-500 to-indigo-500"
+                        className="h-full bg-gradient-to-r from-blue-400 to-indigo-400"
                         initial={{ width: 0 }}
                         animate={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
                     />
@@ -96,12 +99,12 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                             className="space-y-6"
                         >
                             <h3 className="text-xl font-semibold mb-6 flex items-center">
-                                <Users className="w-5 h-5 mr-2 text-purple-400" /> Who are you?
+                                <Users className="w-5 h-5 mr-2 text-blue-300" /> Who are you?
                             </h3>
                             <div className="space-y-4">
-                                <Input label="Full Name" name="name" value={data.name} onChange={handleChange} placeholder="Jane Doe" />
-                                <Input label="Email Address" type="email" name="email" value={data.email} onChange={handleChange} placeholder="jane@example.com" />
-                                <Input label="Phone Number" type="tel" name="phone" value={data.phone} onChange={handleChange} placeholder="+1 (555) 000-0000" />
+                                <Input label="Full Name" name="name" value={data.name} onChange={handleChange} placeholder="Jane Doe" tooltip="Your legal name or display name." />
+                                <Input label="Email Address" type="email" name="email" value={data.email} onChange={handleChange} placeholder="jane@example.com" tooltip="Used for invite codes and notifications." />
+                                <Input label="Phone Number" type="tel" name="phone" value={data.phone} onChange={handleChange} placeholder="+1 (555) 000-0000" tooltip="For urgent account updates." />
                             </div>
                         </motion.div>
                     )}
@@ -115,12 +118,32 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                             className="space-y-6"
                         >
                             <h3 className="text-xl font-semibold mb-6 flex items-center">
-                                <Instagram className="w-5 h-5 mr-2 text-pink-400" /> Social Presence
+                                <Instagram className="w-5 h-5 mr-2 text-blue-300" /> Social Presence
                             </h3>
                             <div className="space-y-4">
-                                <Input label="Instagram ID" name="instagram" value={data.instagram} onChange={handleChange} placeholder="@username" />
+                                <Input label="Instagram ID" name="instagram" value={data.instagram} onChange={handleChange} placeholder="@username" tooltip="Your main content profile." />
 
-                                <Input label="Primary Niche" name="niche" value={data.niche} onChange={handleChange} placeholder="e.g., Fashion, Travel, Tech" />
+                                <div className="flex flex-col space-y-2">
+                                    <div className="flex items-center">
+                                        <label className="text-sm font-medium text-white/80">Primary Niche</label>
+                                        <InfoTooltip text="Your primary content category." />
+                                    </div>
+                                    <select
+                                        name="niche"
+                                        value={data.niche}
+                                        onChange={handleChange}
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/50 focus:bg-white/10 transition-colors"
+                                    >
+                                        <option value="" className="text-black">Any Niche</option>
+                                        <option value="Fashion" className="text-black">Fashion</option>
+                                        <option value="Beauty" className="text-black">Beauty</option>
+                                        <option value="Tech" className="text-black">Tech</option>
+                                        <option value="Lifestyle" className="text-black">Lifestyle</option>
+                                        <option value="Fitness" className="text-black">Fitness</option>
+                                        <option value="Travel" className="text-black">Travel</option>
+                                        <option value="Food" className="text-black">Food</option>
+                                    </select>
+                                </div>
                             </div>
                         </motion.div>
                     )}
@@ -134,26 +157,47 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                             className="space-y-6"
                         >
                             <h3 className="text-xl font-semibold mb-6 flex items-center">
-                                <MapPin className="w-5 h-5 mr-2 text-emerald-400" /> The Details
+                                <MapPin className="w-5 h-5 mr-2 text-blue-300" /> The Details
                             </h3>
                             <div className="grid grid-cols-2 gap-4 mb-4">
-                                <Input label="Age Group" name="age" value={data.age} onChange={handleChange} placeholder="18-24" />
-                                <Input label="Location" name="location" value={data.location} onChange={handleChange} placeholder="City, Country" />
-                            </div>
-                            <Input label="Portfolio / Media Kit URL" name="portfolio" value={data.portfolio} onChange={handleChange} placeholder="Link to your work" />
-                            <div className="flex flex-col space-y-2">
-                                <label className="text-sm font-medium text-white/80">Preferred Campaign Types</label>
-                                <select
-                                    name="campaignTypes"
-                                    value={data.campaignTypes}
+                                <div className="flex flex-col space-y-2">
+                                    <div className="flex items-center">
+                                        <label className="text-sm font-medium text-white/80">Age Group</label>
+                                        <InfoTooltip text="Used for demographic targeting." />
+                                    </div>
+                                    <select
+                                        name="age"
+                                        value={data.age}
+                                        onChange={handleChange}
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/50 focus:bg-white/10 transition-colors"
+                                    >
+                                        <option value="" className="text-black">Select...</option>
+                                        <option value="18-24" className="text-black">18-24</option>
+                                        <option value="25-34" className="text-black">25-34</option>
+                                        <option value="35-44" className="text-black">35-44</option>
+                                        <option value="45-54" className="text-black">45-54</option>
+                                        <option value="55-64" className="text-black">55-64</option>
+                                        <option value="65+" className="text-black">65+</option>
+                                    </select>
+                                </div>
+                                <LocationAutocomplete
+                                    label="Location"
+                                    value={data.location}
                                     onChange={handleChange}
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/30 focus:bg-white/10 transition-colors"
-                                >
-                                    <option value="" className="text-black">Select...</option>
-                                    <option value="paid" className="text-black">Paid Sponsorships</option>
-                                    <option value="gifted" className="text-black">Gifting / Barter</option>
-                                    <option value="both" className="text-black">Both</option>
-                                </select>
+                                    placeholder="City, Country"
+                                    tooltip="Helps match you with local campaigns."
+                                />
+                            </div>
+                            <Input label="Portfolio / Media Kit URL" name="portfolio" value={data.portfolio} onChange={handleChange} placeholder="Link to your work" tooltip="Link to your media kit or past work." />
+                            <div className="flex flex-col space-y-3">
+                                <div className="flex items-center">
+                                    <label className="text-sm font-medium text-white/80">Preferred Campaign Types</label>
+                                    <InfoTooltip text="Types of deals you are interested in." />
+                                </div>
+                                <CampaignTypeSelector
+                                    value={data.campaignTypes}
+                                    onChange={(value) => setData({ ...data, campaignTypes: value })}
+                                />
                             </div>
                         </motion.div>
                     )}
@@ -167,7 +211,7 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                             className="space-y-6"
                         >
                             <h3 className="text-xl font-semibold mb-6 flex items-center">
-                                <CheckCircle className="w-5 h-5 mr-2 text-blue-400" /> Final Step
+                                <CheckCircle className="w-5 h-5 mr-2 text-blue-300" /> Final Step
                             </h3>
                             <div className="bg-white/5 p-6 rounded-xl border border-white/10 space-y-4">
                                 <label className="flex items-start space-x-3 cursor-pointer group">
@@ -176,7 +220,7 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                                         name="agreedToTerms"
                                         checked={data.agreedToTerms || false}
                                         onChange={(e) => setData({ ...data, agreedToTerms: e.target.checked })}
-                                        className="mt-1 w-5 h-5 rounded border-white/30 bg-white/10 checked:bg-purple-500 checked:border-transparent transition-all"
+                                        className="mt-1 w-5 h-5 rounded border-white/30 bg-white/10 checked:bg-blue-600 checked:border-transparent transition-all"
                                     />
                                     <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">
                                         I agree to the Terms of Service and Privacy Policy. I understand that Jetfluenz is currently in beta.
@@ -188,7 +232,7 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                                         name="agreedToAuthorized"
                                         checked={data.agreedToAuthorized || false}
                                         onChange={(e) => setData({ ...data, agreedToAuthorized: e.target.checked })}
-                                        className="mt-1 w-5 h-5 rounded border-white/30 bg-white/10 checked:bg-purple-500 checked:border-transparent transition-all"
+                                        className="mt-1 w-5 h-5 rounded border-white/30 bg-white/10 checked:bg-blue-600 checked:border-transparent transition-all"
                                     />
                                     <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">
                                         I confirm that the provided information is accurate and I am authorized to represent this account.
@@ -230,9 +274,12 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
     );
 }
 
-const Input = ({ label, ...props }) => (
+const Input = ({ label, tooltip, ...props }) => (
     <div className="flex flex-col space-y-2">
-        <label className="text-sm font-medium text-white/80">{label}</label>
+        <div className="flex items-center">
+            <label className="text-sm font-medium text-white/80">{label}</label>
+            {tooltip && <InfoTooltip text={tooltip} />}
+        </div>
         <input
             className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/50 focus:bg-white/10 transition-colors"
             {...props}

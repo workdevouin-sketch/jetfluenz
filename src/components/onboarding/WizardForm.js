@@ -70,7 +70,7 @@ export default function WizardForm({ isOpen, onClose }) {
                         initial={{ scale: 0.9, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                        className="relative w-full max-w-4xl bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden min-h-[500px] sm:min-h-[600px] flex flex-col"
+                        className="relative w-full max-w-4xl bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
                     >
                         {/* Header / Close Button */}
                         <div className="absolute top-4 right-4 z-10">
@@ -83,7 +83,7 @@ export default function WizardForm({ isOpen, onClose }) {
                         </div>
 
                         {/* Content Area */}
-                        <div className="flex-1 flex flex-col p-6 sm:p-8 md:p-12 text-white">
+                        <div className="flex-1 flex flex-col p-6 sm:p-8 md:p-12 text-white overflow-y-auto custom-scrollbar">
                             <AnimatePresence mode="wait">
                                 {step === 'role' && (
                                     <StepRoleSelection key="role" onSelect={handleRoleSelect} />

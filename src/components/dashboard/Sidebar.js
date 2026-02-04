@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, Briefcase, DollarSign, Users, Settings, LogOut } from 'lucide-react';
+import { LayoutGrid, Briefcase, DollarSign, Users, Settings, LogOut, TrendingUp } from 'lucide-react';
 
 const Sidebar = ({ role = 'influencer' }) => {
     const pathname = usePathname();
@@ -23,6 +23,7 @@ const Sidebar = ({ role = 'influencer' }) => {
         navItems = [
             { name: 'Dashboard', href: `${basePath}`, icon: LayoutGrid },
             { name: 'Campaigns', href: `${basePath}/campaigns`, icon: Briefcase },
+            { name: 'Affiliate', href: `${basePath}/affiliate`, icon: TrendingUp },
             { name: 'Earnings', href: `${basePath}/earnings`, icon: DollarSign },
             { name: 'Settings', href: `${basePath}/settings`, icon: Settings },
         ];
@@ -31,9 +32,10 @@ const Sidebar = ({ role = 'influencer' }) => {
     return (
         <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-100 h-screen fixed left-0 top-0 z-30">
             {/* Logo Area */}
-            <div className="p-8 flex items-center">
-                <Link href="/" className="flex items-center gap-2">
-                    <img src="/logo.png" alt="Jetfluenz" className="h-20 w-auto" />
+
+            <div className="p-6 flex items-center justify-center">
+                <Link href="/" className="flex items-center justify-center bg-[#2008b9] p-4 rounded-xl shadow-lg shadow-blue-500/20 hover:scale-[1.02] transition-transform w-full">
+                    <img src="/logo.png" alt="Jetfluenz" className="h-14 w-auto" />
                 </Link>
             </div>
 
