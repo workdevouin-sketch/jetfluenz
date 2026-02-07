@@ -51,7 +51,7 @@ export default function SuccessScreen({ onClose }) {
 
             <h2 className="text-4xl md:text-5xl font-bold mb-4">You're on the list!</h2>
             <p className="text-xl text-white/70 max-w-lg mb-10">
-                We've received your application. Keep an eye on your inbox – we'll be in touch soon with your exclusive invite code.
+                We've received your application. We're setting up your profile now and will be in touch soon with your access details.
             </p>
 
             <div className="w-full max-w-sm bg-white/10 backdrop-blur-md rounded-xl p-4 mb-8 border border-white/20">
