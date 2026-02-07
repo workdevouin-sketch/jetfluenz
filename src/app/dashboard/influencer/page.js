@@ -4,12 +4,15 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '../../../components/dashboard/DashboardLayout';
 import { Check, X, ArrowRight, TrendingUp, Users, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { doc, getDoc, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from '../../../lib/firebase';
 import { getInfluencerCampaigns } from '../../../lib/campaigns';
 import InstagramStats from '../../../components/influencer/InstagramStats';
 
 export default function InfluencerDashboard() {
     const { userData } = useAuth();
     const [assignedCampaigns, setAssignedCampaigns] = useState([]);
+    const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -17,10 +20,39 @@ export default function InfluencerDashboard() {
             if (!userData?.id) return;
 
             try {
-                // Fetch Assigned Campaigns
-                const campRes = await getInfluencerCampaigns(userData.id);
-                if (campRes.success) {
-                    setAssignedCampaigns(campRes.campaigns);
+                const storedUser = JSON.parse(localStorage.getItem('jetfluenz_influencer_session'));
+                if (storedUser?.id) {
+                    // Fetch Profile
+                    const docRef = doc(db, 'users', storedUser.id);
+                    const docSnap = await getDoc(docRef);
+
+                    if (docSnap.exists()) {
+                        setUserData(docSnap.data());
+                    }
+
+                    // Fetch Assigned Campaigns
+                    const campRes = await getInfluencerCampaigns(storedUser.id);
+                    if (campRes.success) {
+                        setAssignedCampaigns(campRes.campaigns);
+                    }
+
+                    // Fetch Payments (Limit 5)
+                    try {
+                        const paymentsQ = query(
+                            collection(db, 'payments'),
+                            where('influencerId', '==', storedUser.id),
+                            orderBy('createdAt', 'desc'),
+                            limit(5)
+                        );
+                        const paymentsSnap = await getDocs(paymentsQ);
+                        const paymentsList = [];
+                        paymentsSnap.forEach(doc => {
+                            paymentsList.push({ id: doc.id, ...doc.data() });
+                        });
+                        setPayments(paymentsList);
+                    } catch (err) {
+                        console.error("Error fetching payments:", err);
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching campaigns:", error);
@@ -149,37 +181,41 @@ export default function InfluencerDashboard() {
                         {/* Earnings Tracker (Visual only for now) */}
                         <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
                             <h3 className="text-xl font-bold text-[#343C6A] mb-8">Earnings Tracker</h3>
-                            <div className="overflow-x-auto">
-                                <table className="w-full min-w-[600px]">
-                                    <thead>
-                                        <tr className="border-b border-gray-100">
-                                            <th className="text-left py-4 px-4 text-gray-400 font-medium text-sm">Campaign</th>
-                                            <th className="text-left py-4 px-4 text-gray-400 font-medium text-sm">Date</th>
-                                            <th className="text-left py-4 px-4 text-gray-400 font-medium text-sm">Status</th>
-                                            <th className="text-right py-4 px-4 text-gray-400 font-medium text-sm">Amount</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-50">
-                                        {[
-                                            { id: 1, campaign: 'Summer Glow 2025', date: 'Jan 15, 2025', status: 'Processing', amount: 1250 },
-                                            { id: 2, campaign: 'Holiday Special', date: 'Dec 28, 2024', status: 'Paid', amount: 3000 },
-                                            { id: 3, campaign: 'Tech Review Series', date: 'Dec 10, 2024', status: 'Paid', amount: 850 },
-                                        ].map((payment) => (
-                                            <tr key={payment.id} className="group hover:bg-gray-50/50 transition-colors">
-                                                <td className="py-4 px-4 font-bold text-[#343C6A]">{payment.campaign}</td>
-                                                <td className="py-4 px-4 text-gray-500 text-sm">{payment.date}</td>
-                                                <td className="py-4 px-4">
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${payment.status === 'Paid' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
-                                                        }`}>
-                                                        {payment.status}
-                                                    </span>
-                                                </td>
-                                                <td className="py-4 px-4 text-right font-bold text-[#2008b9]">+${payment.amount}</td>
+                            {payments.length === 0 ? (
+                                <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-2xl">
+                                    <p>No recent payments found.</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full min-w-[600px]">
+                                        <thead>
+                                            <tr className="border-b border-gray-100">
+                                                <th className="text-left py-4 px-4 text-gray-400 font-medium text-sm">Campaign</th>
+                                                <th className="text-left py-4 px-4 text-gray-400 font-medium text-sm">Date</th>
+                                                <th className="text-left py-4 px-4 text-gray-400 font-medium text-sm">Status</th>
+                                                <th className="text-right py-4 px-4 text-gray-400 font-medium text-sm">Amount</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50">
+                                            {payments.map((payment) => (
+                                                <tr key={payment.id} className="group hover:bg-gray-50/50 transition-colors">
+                                                    <td className="py-4 px-4 font-bold text-[#343C6A]">{payment.campaignName || 'Campaign Payment'}</td>
+                                                    <td className="py-4 px-4 text-gray-500 text-sm">
+                                                        {payment.createdAt?.seconds ? new Date(payment.createdAt.seconds * 1000).toLocaleDateString() : 'Active'}
+                                                    </td>
+                                                    <td className="py-4 px-4">
+                                                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${payment.status === 'Paid' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
+                                                            }`}>
+                                                            {payment.status || 'Pending'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-4 px-4 text-right font-bold text-[#2008b9]">+₹{payment.amount}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
                         </div>
 
                     </div>

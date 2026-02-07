@@ -1,7 +1,7 @@
 'use client';
 
 import DashboardLayout from '../../../../components/dashboard/DashboardLayout';
-import { Search, Filter, Briefcase, MapPin, DollarSign, Clock, CheckCircle } from 'lucide-react';
+import { Search, Filter, Briefcase, MapPin, DollarSign, Clock, CheckCircle, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getAllCampaigns, applyToCampaign, acceptCampaign, rejectCampaign } from '../../../../lib/campaigns';
 
@@ -87,8 +87,25 @@ export default function InfluencerCampaigns() {
     const myApplications = campaigns.filter(c => (c.applicants || []).some(app => app.id === user?.id));
     const myOffers = campaigns.filter(c => c.status === 'offered' && c.assignedTo?.id === user?.id);
 
+    // Recommended Logic
+    const recommendedCampaigns = activeCampaigns.filter(c => {
+        if (!user) return false;
+        // 1. Niche Match (strict)
+        const nicheMatch = c.niche && user.niche && c.niche.toLowerCase() === user.niche.toLowerCase();
+
+        // 2. Follower Count Check (if specified by business)
+        let followerMatch = true;
+        if (c.minFollowers) {
+            const userFollowers = user.instagram_stats?.profile?.followers_count || 0;
+            followerMatch = userFollowers >= parseInt(c.minFollowers);
+        }
+
+        return nicheMatch && followerMatch;
+    });
+
     let displayedCampaigns = [];
     if (activeTab === 'browse') displayedCampaigns = activeCampaigns.filter(c => !(c.applicants || []).some(app => app.id === user?.id));
+    if (activeTab === 'recommended') displayedCampaigns = recommendedCampaigns.filter(c => !(c.applicants || []).some(app => app.id === user?.id));;
     if (activeTab === 'applications') displayedCampaigns = myApplications;
     if (activeTab === 'offers') displayedCampaigns = myOffers;
 
@@ -97,7 +114,7 @@ export default function InfluencerCampaigns() {
             {/* Tabs & Search */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div className="flex items-center space-x-6 border-b border-gray-200 w-full md:w-auto overflow-x-auto">
-                    {['browse', 'applications', 'offers'].map((tab) => (
+                    {['browse', 'recommended', 'applications', 'offers'].map((tab) => (
                         <button
                             key={tab}
                             className={`pb-3 px-2 text-base font-medium transition-all capitalize border-b-2 whitespace-nowrap ${activeTab === tab
@@ -106,7 +123,7 @@ export default function InfluencerCampaigns() {
                                 }`}
                             onClick={() => setActiveTab(tab)}
                         >
-                            {tab === 'browse' ? 'Browse Opportunities' : tab === 'applications' ? 'My Applications' : 'My Offers'}
+                            {tab === 'browse' ? 'Browse Opportunities' : tab === 'recommended' ? 'Recommended for You' : tab === 'applications' ? 'My Applications' : 'My Offers'}
                         </button>
                     ))}
                 </div>
@@ -128,7 +145,10 @@ export default function InfluencerCampaigns() {
                 <div className="text-center py-12 text-gray-500">Loading campaigns...</div>
             ) : displayedCampaigns.length === 0 ? (
                 <div className="text-center py-12 text-gray-500 bg-white rounded-2xl border border-gray-100">
-                    {activeTab === 'browse' ? "No active campaigns found at the moment." : "You haven't applied to any campaigns yet."}
+                    {activeTab === 'browse' ? "No active campaigns found at the moment." :
+                        activeTab === 'recommended' ? "No campaigns match your niche/profile right now." :
+                            activeTab === 'applications' ? "You haven't applied to any campaigns yet." :
+                                "No offers yet."}
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -171,12 +191,21 @@ const CampaignCard = ({ campaign, user, onApply, onAccept, onReject, loading, ty
         );
     } else {
         statusBadge = (
-            <span className="bg-blue-50 text-blue-600 text-xs font-bold px-2 py-1 rounded-full">{campaign.status}</span>
+            <span className={`text-xs font-bold px-2 py-1 rounded-full ${campaign.type === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                {campaign.type || 'Campaign'}
+            </span>
         );
     }
 
     return (
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow group flex flex-col h-full">
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow group flex flex-col h-full relative">
+            {/* Niche Badge */}
+            {campaign.niche && (
+                <div className="absolute top-4 right-4 bg-gray-100 text-gray-500 text-[10px] uppercase font-bold px-2 py-0.5 rounded-md tracking-wider">
+                    {campaign.niche}
+                </div>
+            )}
+
             <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold uppercase">
@@ -187,32 +216,51 @@ const CampaignCard = ({ campaign, user, onApply, onAccept, onReject, loading, ty
                         <p className="text-xs text-gray-500">{campaign.goal || 'Campaign'}</p>
                     </div>
                 </div>
-                {statusBadge}
+                {/* Status Badge is now mostly for Type in Browse mode */}
+                {type !== 'browse' && type !== 'recommended' && statusBadge}
             </div>
 
             <h4 className="font-bold text-lg text-gray-800 mb-2 group-hover:text-[#2008b9] transition-colors line-clamp-1">{campaign.title}</h4>
-            <p className="text-sm text-gray-500 mb-6 line-clamp-3 flex-grow">
+
+            {/* Detailed Chips */}
+            <div className="flex flex-wrap gap-2 mb-4">
+                {campaign.minFollowers && (
+                    <span className="flex items-center gap-1 text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded-md">
+                        <Users className="w-3 h-3" /> {campaign.minFollowers}+
+                    </span>
+                )}
+                {campaign.engagement && (
+                    <span className="flex items-center gap-1 text-[10px] font-bold bg-purple-50 text-purple-600 px-2 py-1 rounded-md">
+                        <CheckCircle className="w-3 h-3" /> {campaign.engagement} ER
+                    </span>
+                )}
+                <span className={`text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 ${campaign.type === 'Paid' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'}`}>
+                    <DollarSign className="w-3 h-3" /> {campaign.type || 'Paid'}
+                </span>
+            </div>
+
+            <p className="text-sm text-gray-500 mb-4 line-clamp-3 bg-gray-50 p-3 rounded-xl flex-grow font-medium leading-relaxed">
                 {campaign.description}
             </p>
 
-            <div className="space-y-3 mb-6 mt-auto">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <DollarSign className="w-4 h-4 text-gray-400" />
-                    <span className="font-medium">${campaign.budget}</span>
+            <div className="space-y-3 mb-6 mt-auto border-t pt-4">
+                <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span className="text-gray-400 font-medium text-xs uppercase">Budget</span>
+                    <span className="font-bold text-[#343C6A] text-lg">₹{Math.round(parseInt(campaign.budget || 0) * 0.25)}</span>
                 </div>
                 {campaign.startDate && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Clock className="w-4 h-4 text-gray-400" />
-                        <span>Starts: {campaign.startDate}</span>
+                    <div className="flex items-center justify-between text-sm text-gray-600">
+                        <span className="text-gray-400 font-medium text-xs uppercase">Starts</span>
+                        <span className="font-bold text-gray-800 text-xs">{campaign.startDate}</span>
                     </div>
                 )}
             </div>
 
-            {type === 'browse' && (
+            {(type === 'browse' || type === 'recommended') && (
                 <button
                     onClick={() => onApply(campaign)}
                     disabled={loading}
-                    className="w-full py-3 rounded-xl border border-[#2008b9] text-[#2008b9] font-bold hover:bg-[#2008b9] hover:text-white transition-all disabled:opacity-50"
+                    className="w-full py-3 rounded-xl bg-[#2008b9] text-white font-bold hover:bg-blue-800 shadow-lg shadow-blue-200 transition-all disabled:opacity-50"
                 >
                     {loading ? 'Applying...' : 'Apply Now'}
                 </button>
@@ -238,7 +286,7 @@ const CampaignCard = ({ campaign, user, onApply, onAccept, onReject, loading, ty
             )}
             {type === 'applications' && (
                 <button disabled className="w-full py-3 rounded-xl bg-gray-100 text-gray-400 font-bold border border-transparent cursor-default">
-                    View Status
+                    {statusBadge}
                 </button>
             )}
         </div>

@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, serverTimestamp, orderBy, getDoc, arrayUnion } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, serverTimestamp, orderBy, getDoc, arrayUnion, runTransaction } from 'firebase/firestore';
 import { db } from './firebase';
 
 // Create a new campaign (Business)
@@ -165,6 +165,34 @@ export const deleteCampaign = async (campaignId) => {
         return { success: true };
     } catch (error) {
         console.error('Error deleting campaign:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+// Complete campaign and generate payment
+export const completeCampaign = async (campaignId, paymentData) => {
+    try {
+        await runTransaction(db, async (transaction) => {
+            const campaignRef = doc(db, 'campaigns', campaignId);
+            const paymentRef = doc(collection(db, 'payments'));
+
+            // 1. Update Campaign Status
+            transaction.update(campaignRef, {
+                status: 'completed',
+                completedAt: serverTimestamp()
+            });
+
+            // 2. Create Payment Record
+            transaction.set(paymentRef, {
+                ...paymentData,
+                status: 'Paid',
+                createdAt: serverTimestamp(),
+                campaignId: campaignId
+            });
+        });
+        return { success: true };
+    } catch (error) {
+        console.error('Error completing campaign:', error);
         return { success: false, error: error.message };
     }
 };

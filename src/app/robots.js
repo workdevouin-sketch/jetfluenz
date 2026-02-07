@@ -1,12 +1,10 @@
 export default function robots() {
-  const baseUrl = 'https://jetfluenz.com' // Replace with your actual domain
-  
   return {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/admin/', '/api/'],
+      disallow: ['/dashboard/', '/admin/', '/api/'],
     },
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: 'https://jetfluenz.com/sitemap.xml',
   }
 }

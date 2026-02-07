@@ -76,7 +76,7 @@ export default function StepBusiness({ onSubmit, isSubmitting, initialData }) {
                 </div>
                 <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
                     <motion.div
-                        className="h-full bg-gradient-to-r from-emerald-500 to-teal-500"
+                        className="h-full bg-gradient-to-r from-blue-400 to-indigo-400"
                         initial={{ width: 0 }}
                         animate={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
                     />
@@ -95,7 +95,7 @@ export default function StepBusiness({ onSubmit, isSubmitting, initialData }) {
                             className="space-y-6"
                         >
                             <h3 className="text-xl font-semibold mb-6 flex items-center">
-                                <Building2 className="w-5 h-5 mr-2 text-emerald-400" /> Company Identity
+                                <Building2 className="w-5 h-5 mr-2 text-blue-300" /> Company Identity
                             </h3>
                             <div className="space-y-4">
                                 <Input label="Company Name" name="companyName" value={data.companyName} onChange={handleChange} placeholder="Acme Corp" />
@@ -117,7 +117,7 @@ export default function StepBusiness({ onSubmit, isSubmitting, initialData }) {
                             className="space-y-6"
                         >
                             <h3 className="text-xl font-semibold mb-6 flex items-center">
-                                <Globe className="w-5 h-5 mr-2 text-blue-400" /> Brand Profile
+                                <Globe className="w-5 h-5 mr-2 text-blue-300" /> Brand Profile
                             </h3>
                             <div className="space-y-4">
                                 <Input label="Website URL" name="website" value={data.website} onChange={handleChange} placeholder="https://acme.com" />
@@ -136,7 +136,7 @@ export default function StepBusiness({ onSubmit, isSubmitting, initialData }) {
                             className="space-y-6"
                         >
                             <h3 className="text-xl font-semibold mb-6 flex items-center">
-                                <CheckCircle className="w-5 h-5 mr-2 text-teal-400" /> Final Step
+                                <CheckCircle className="w-5 h-5 mr-2 text-blue-300" /> Final Step
                             </h3>
                             <div className="bg-white/5 p-6 rounded-xl border border-white/10 space-y-4">
                                 <label className="flex items-start space-x-3 cursor-pointer group">
@@ -145,7 +145,7 @@ export default function StepBusiness({ onSubmit, isSubmitting, initialData }) {
                                         name="agreedToTerms"
                                         checked={data.agreedToTerms || false}
                                         onChange={(e) => setData({ ...data, agreedToTerms: e.target.checked })}
-                                        className="mt-1 w-5 h-5 rounded border-white/30 bg-white/10 checked:bg-emerald-500 checked:border-transparent transition-all"
+                                        className="mt-1 w-5 h-5 rounded border-white/30 bg-white/10 checked:bg-blue-600 checked:border-transparent transition-all"
                                     />
                                     <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">
                                         I agree to the Terms of Service and Privacy Policy.
@@ -157,7 +157,7 @@ export default function StepBusiness({ onSubmit, isSubmitting, initialData }) {
                                         name="agreedToAuthorized"
                                         checked={data.agreedToAuthorized || false}
                                         onChange={(e) => setData({ ...data, agreedToAuthorized: e.target.checked })}
-                                        className="mt-1 w-5 h-5 rounded border-white/30 bg-white/10 checked:bg-emerald-500 checked:border-transparent transition-all"
+                                        className="mt-1 w-5 h-5 rounded border-white/30 bg-white/10 checked:bg-blue-600 checked:border-transparent transition-all"
                                     />
                                     <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">
                                         I confirm that I am authorized to represent this business.
