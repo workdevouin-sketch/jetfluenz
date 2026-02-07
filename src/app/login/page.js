@@ -7,7 +7,7 @@ import { Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAuthErrorMessage } from '@/lib/auth/helpers';
 
-export default function LoginPage() {
+function LoginContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { login, isAuthenticated, userData, getUserDashboard, loading: authLoading } = useAuth();
@@ -203,5 +203,17 @@ export default function LoginPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-screen items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-[#2008b9]" />
+            </div>
+        }>
+            <LoginContent />
+        </Suspense>
     );
 }
