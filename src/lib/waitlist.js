@@ -1,33 +1,82 @@
 import { collection, addDoc, getDocs, orderBy, query, serverTimestamp, doc, updateDoc, deleteDoc, setDoc, where } from 'firebase/firestore';
 import { db } from './firebase';
 
-// Add user to waitlist
+// Add user to waitlist and create Auth account
 export const addToWaitlist = async (email, role, instagramUrl = '', phoneNumber = '') => {
   try {
     const userData = {
-      email: email,
-      role: role, // 'influencer' or 'business'
+      email,
+      role,
+      status: 'waitlist',
+      instagram: (instagramUrl && role === 'influencer') ? instagramUrl : '',
+      phone: (phoneNumber && role === 'business') ? phoneNumber : '',
+    };
+
+    return await handleSignupFlow(userData);
+  } catch (error) {
+    console.error('Error adding to waitlist:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Unified Signup Flow
+ * 1. Creates Firebase Auth user FIRST
+ * 2. Uses the resulting UID for the Firestore document
+ * 3. Sets the UID as the temporary password
+ * 4. Stores everything in 'users' collection (no separate collections)
+ */
+export const handleSignupFlow = async (userData) => {
+  try {
+    const { createUserWithEmailAndPassword, updatePassword, signOut } = await import('firebase/auth');
+    const { auth } = await import('./firebase');
+
+    // 1. Create Firebase Authentication user with a placeholder password
+    // We'll update it to the UID immediately after
+    const placeholderPwd = Math.random().toString(36).slice(-10) + 'A1!';
+    let userCredential;
+
+    try {
+      userCredential = await createUserWithEmailAndPassword(
+        auth,
+        userData.email,
+        placeholderPwd
+      );
+    } catch (authError) {
+      if (authError.code === 'auth/email-already-in-use') {
+        return { success: false, error: 'An account with this email already exists.' };
+      }
+      throw authError;
+    }
+
+    const firebaseUser = userCredential.user;
+    const uid = firebaseUser.uid;
+
+    // 2. Update password to be the UID (as requested)
+    await updatePassword(firebaseUser, uid);
+
+    // 3. Create Firestore document in 'users' collection using the UID
+    const finalUserData = {
+      ...userData,
+      id: uid,
+      firebaseUid: uid,
       status: 'waitlist',
       createdAt: serverTimestamp(),
       submittedAt: new Date().toISOString()
     };
 
-    // Only add Instagram ID if provided and user is an influencer
-    // Note: Validation is mostly handled on frontend, but we store what's passed.
-    if (instagramUrl && role === 'influencer') {
-      userData.instagram = instagramUrl;
-    }
+    await setDoc(doc(db, 'users', uid), finalUserData);
 
-    // Only add phone number if provided and user is a business
-    if (phoneNumber && role === 'business') {
-      userData.phone = phoneNumber;
-    }
+    // 4. Sign out the newly created user (staying signed in might be confusing)
+    await signOut(auth);
 
-    const docRef = await addDoc(collection(db, 'users'), userData);
-
-    return { success: true, id: docRef.id };
+    return {
+      success: true,
+      id: uid,
+      message: 'Account created and added to waitlist.'
+    };
   } catch (error) {
-    console.error('Error adding to waitlist:', error);
+    console.error('Signup flow error:', error);
     return { success: false, error: error.message };
   }
 };
@@ -70,12 +119,18 @@ export const updateWaitlistUser = async (userId, userData) => {
   }
 };
 
-// Delete user from waitlist
-export const deleteWaitlistUser = async (userId) => {
+// Full delete: Deletes Firestore document
+// Note: Auth deletion for OTHER users requires Admin SDK/Cloud Functions
+export const deleteUserAccount = async (userId) => {
   try {
+    // 1. Delete Firestore document
     const userRef = doc(db, 'users', userId);
     await deleteDoc(userRef);
-    return { success: true };
+
+    // If deleting the CURRENTLY logged in user, we could do auth.currentUser.delete()
+    // but usually this is an admin action.
+
+    return { success: true, message: 'User deleted from Firestore. Auth account must be deleted via Firebase Console or Admin SDK.' };
   } catch (error) {
     console.error('Error deleting user:', error);
     return { success: false, error: error.message };
@@ -107,67 +162,9 @@ export const addUserFromAdmin = async (userData) => {
   }
 };
 
-// Create Account (Approve & Initialize)
-
+// NOTE: This function is now deprecated and functionality merged into handleSignupFlow
+// to match the "Auth First" requirement.
 export const createAccountForUser = async (userId, userData) => {
-  try {
-    // 1. Update User Status to Approved
-    const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, {
-      status: 'approved',
-      approvedAt: serverTimestamp(),
-      password: userId, // Default password is the User ID
-    });
-
-    // 2. Initialize Role-Specific Dashboard Data
-    // Base object with common fields
-    const baseData = {
-      id: userId,
-      email: userData.email,
-      role: userData.role,
-      status: 'approved',
-      createdAt: serverTimestamp(),
-      phone: userData.phone || '',
-      instagram: userData.instagram || '',
-      website: userData.website || '',
-      location: userData.location || '',
-      // Default Stats
-      notifications: [],
-      messages: []
-    };
-
-    if (userData.role === 'influencer') {
-      const influencerData = {
-        ...baseData,
-        name: userData.name || 'New Influencer',
-        niche: userData.niche || '',
-        followers: userData.followers || 0,
-        engagement: userData.engagement || '',
-        portfolio: userData.portfolio || '',
-        // Dashboard specific
-        balance: 0,
-        earnings: [],
-        campaigns: [],
-      };
-      await setDoc(doc(db, 'influencers', userId), influencerData);
-    } else {
-      const businessData = {
-        ...baseData,
-        name: userData.companyName || userData.name || 'New Business', // Dashboard display name
-        companyName: userData.companyName || '',
-        contactPerson: userData.contactPerson || '',
-        industry: userData.industry || '',
-        // Dashboard specific
-        totalSpend: 0,
-        invoices: [],
-        employees: [],
-      };
-      await setDoc(doc(db, 'businesses', userId), businessData);
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.error('Error creating account:', error);
-    return { success: false, error: error.message };
-  }
+  console.warn('createAccountForUser is deprecated. Use handleSignupFlow.');
+  return { success: false, error: 'Deprecated function' };
 };

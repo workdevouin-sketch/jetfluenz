@@ -3,19 +3,22 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../../components/dashboard/DashboardLayout';
 import { Check, X, ArrowRight, TrendingUp, Users, RefreshCw } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { doc, getDoc, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import { getInfluencerCampaigns } from '../../../lib/campaigns';
 import InstagramStats from '../../../components/influencer/InstagramStats';
 
 export default function InfluencerDashboard() {
-    const [userData, setUserData] = useState(null);
+    const { userData } = useAuth();
     const [assignedCampaigns, setAssignedCampaigns] = useState([]);
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchUserData = async () => {
+        const fetchCampaigns = async () => {
+            if (!userData?.id) return;
+
             try {
                 const storedUser = JSON.parse(localStorage.getItem('jetfluenz_influencer_session'));
                 if (storedUser?.id) {
@@ -52,14 +55,14 @@ export default function InfluencerDashboard() {
                     }
                 }
             } catch (error) {
-                console.error("Error fetching user data:", error);
+                console.error("Error fetching campaigns:", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchUserData();
-    }, []);
+        fetchCampaigns();
+    }, [userData]);
 
     if (loading) {
         return (

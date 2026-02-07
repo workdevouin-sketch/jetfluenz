@@ -1,18 +1,69 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Mail, Lock, Loader2 } from 'lucide-react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { getAuthErrorMessage } from '@/lib/auth/helpers';
 
 export default function LoginPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const { login, isAuthenticated, userData, getUserDashboard, loading: authLoading } = useAuth();
+    const timeoutRef = useRef(null);
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    // Check for session expiration or error messages
+    useEffect(() => {
+        const expired = searchParams.get('expired') === 'true';
+        const errorParam = searchParams.get('error');
+
+        if (expired) {
+            setError('Your session has expired. Please log in again.');
+        } else if (errorParam === 'pending') {
+            setError('Your account is pending approval. You will be notified once it is active.');
+        } else if (errorParam === 'banned') {
+            setError('This account has been suspended.');
+        }
+
+        // Cleanup timeout on unmount
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, [searchParams]);
+
+    // Redirect if already authenticated AND userData is loaded
+    useEffect(() => {
+        console.log('Login redirect check:', {
+            authLoading,
+            isAuthenticated,
+            hasRole: !!userData?.role,
+            role: userData?.role,
+            dashboardRoute: userData?.role ? getUserDashboard() : 'N/A'
+        });
+
+        if (!authLoading && isAuthenticated && userData?.role) {
+            const dashboardRoute = getUserDashboard();
+            console.log('Redirecting to:', dashboardRoute);
+
+            // Clear the timeout since we're redirecting successfully
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+                timeoutRef.current = null;
+            }
+
+            if (dashboardRoute !== '/') {
+                router.push(dashboardRoute);
+            }
+        }
+    }, [isAuthenticated, authLoading, userData, router, getUserDashboard]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -20,77 +71,41 @@ export default function LoginPage() {
         setError('');
 
         try {
-            // 1. Check for Admin Credentials (Hardcoded)
-            if (email === 'devou.in@gmail.com' && password === 'jetfluenz2026') {
-                localStorage.setItem('jetfluenz_admin_session', JSON.stringify({
-                    id: 'admin_master',
-                    role: 'admin',
-                    email: email,
-                    name: 'Admin'
-                }));
-                router.push('/admin');
-                return;
-            }
+            const result = await login(email, password);
 
-            // 2. Query User by Email (Normal Users)
-            const q = query(collection(db, 'users'), where('email', '==', email));
-            const querySnapshot = await getDocs(q);
+            if (result.success) {
+                // Set a timeout fallback in case userData doesn't load
+                timeoutRef.current = setTimeout(() => {
+                    setLoading(false);
+                    setError('Login successful but unable to load user data. Please refresh the page.');
+                }, 5000); // 5 second timeout
 
-            if (querySnapshot.empty) {
-                setError('No account found with this email.');
-                setLoading(false);
-                return;
-            }
-
-            // 2. Validate Password (User ID) and Status
-            const userDoc = querySnapshot.docs[0];
-            const userData = userDoc.data();
-            const userId = userDoc.id;
-
-            if (userData.status === 'banned') {
-                setError('Your account has been banned due to violation of terms.');
-                setLoading(false);
-                return;
-            }
-
-            if (userData.status !== 'approved') {
-                setError('Your account is still pending approval.');
-                setLoading(false);
-                return;
-            }
-
-            // Expected password is the UserID (or the stored password field if we set it)
-            // We set 'password' field in createAccountForUser, so we can check that.
-            // Fallback to ID check if password field missing.
-            const validPassword = userData.password || userId;
-
-            if (password !== validPassword) {
-                setError('Incorrect password (Hint: Check your provided credentials).');
-                setLoading(false);
-                return;
-            }
-
-            // 3. Login Success
-            // Persist session to role-specific storage
-            const sessionData = { id: userId, ...userData };
-            if (userData.role === 'business') {
-                localStorage.setItem('jetfluenz_business_session', JSON.stringify(sessionData));
-                router.push('/dashboard/business');
-            } else if (userData.role === 'influencer') {
-                localStorage.setItem('jetfluenz_influencer_session', JSON.stringify(sessionData));
-                router.push('/dashboard/influencer');
+                // AuthContext will handle user data fetching
+                // The useEffect will handle the redirect once userData is loaded
             } else {
-                // Fallback
-                localStorage.setItem('jetfluenz_user', JSON.stringify(sessionData));
-                router.push('/dashboard');
+                // Display user-friendly error message
+                setError(getAuthErrorMessage(result.error));
+                setLoading(false);
             }
-
         } catch (err) {
             console.error('Login Error:', err);
-            setError('An error occurred. Please try again.');
+            setError('An unexpected error occurred. Please try again.');
             setLoading(false);
         }
     };
+
+    // Don't render login form if already authenticated
+    if (authLoading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-[#2008b9]" />
+            </div>
+        );
+    }
+
+    if (isAuthenticated && userData?.role) {
+        return null; // Will redirect via useEffect
+    }
 
     return (
         <div className="flex min-h-screen items-stretch">
@@ -122,8 +137,9 @@ export default function LoginPage() {
 
                     <form onSubmit={handleLogin} className="space-y-6">
                         {error && (
-                            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center">
-                                {error}
+                            <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm flex items-start gap-3">
+                                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                                <span>{error}</span>
                             </div>
                         )}
 
@@ -139,6 +155,7 @@ export default function LoginPage() {
                                 placeholder="Email Address"
                                 className="w-full pl-12 pr-4 py-4 bg-white border border-gray-100 rounded-[20px] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2008b9] focus:border-transparent transition-all shadow-sm"
                                 required
+                                disabled={loading}
                             />
                         </div>
 
@@ -151,26 +168,38 @@ export default function LoginPage() {
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Password (Use Your User ID)"
+                                placeholder="Password"
                                 className="w-full pl-12 pr-4 py-4 bg-white border border-gray-100 rounded-[20px] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2008b9] focus:border-transparent transition-all shadow-sm"
                                 required
+                                disabled={loading}
                             />
                         </div>
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-[#2008b9] text-white font-bold py-4 rounded-[20px] shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 hover:bg-blue-800 transition-all transform hover:-translate-y-0.5 flex justify-center items-center disabled:opacity-70 disabled:hover:translate-y-0"
+                            className="w-full bg-[#2008b9] text-white font-bold py-4 rounded-[20px] shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 hover:bg-blue-800 transition-all transform hover:-translate-y-0.5 flex justify-center items-center disabled:opacity-70 disabled:hover:translate-y-0 disabled:cursor-not-allowed"
                         >
                             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Login'}
                         </button>
 
                         <div className="text-center">
-                            <Link href="#" className="text-gray-400 hover:text-[#2008b9] text-sm transition-colors">
-                                Forgot Password
+                            <Link
+                                href="/reset-password"
+                                className="text-gray-400 hover:text-[#2008b9] text-sm transition-colors"
+                            >
+                                Forgot Password?
                             </Link>
                         </div>
                     </form>
+
+                    {/* Info Box */}
+                    <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-2xl">
+                        <p className="text-sm text-gray-600">
+                            <strong>New user?</strong> Your account must be approved by an admin.
+                            Contact support if you haven't received your login credentials.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
