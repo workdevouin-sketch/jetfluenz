@@ -179,116 +179,138 @@ const CampaignCard = ({ campaign, user, onApply, onAccept, onReject, loading, ty
         const application = (campaign.applicants || []).find(a => a.id === user?.id);
         const status = application?.status || 'Applied';
         statusBadge = (
-            <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+            <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide ${status === 'accepted' ? 'bg-green-100 text-green-700' :
+                status === 'rejected' ? 'bg-red-100 text-red-700' :
+                    'bg-blue-100 text-blue-700'
+                }`}>
                 {status}
             </span>
         );
     } else if (type === 'offers') {
         statusBadge = (
-            <span className="bg-purple-100 text-purple-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+            <span className="bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide flex items-center gap-1">
+                <Users className="w-3 h-3" />
                 Special Offer
             </span>
         );
     } else {
+        // In browse mode, show match score or new tag
         statusBadge = (
-            <span className={`text-xs font-bold px-2 py-1 rounded-full ${campaign.type === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                {campaign.type || 'Campaign'}
+            <span className="bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
+                {campaign.platform || 'Instagram'}
             </span>
         );
     }
 
     return (
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow group flex flex-col h-full relative">
-            {/* Niche Badge */}
-            {campaign.niche && (
-                <div className="absolute top-4 right-4 bg-gray-100 text-gray-500 text-[10px] uppercase font-bold px-2 py-0.5 rounded-md tracking-wider">
-                    {campaign.niche}
-                </div>
-            )}
+        <div className="bg-white rounded-[1.5rem] p-6 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 group flex flex-col h-full hover:-translate-y-1 relative overflow-hidden">
+            {/* Top accent bar */}
+            <div className={`absolute top-0 left-0 w-full h-1 ${campaign.type === 'Paid' ? 'bg-green-500' : 'bg-orange-500'}`}></div>
 
-            <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold uppercase">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-5 mt-2">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 flex items-center justify-center text-[#343C6A] font-bold text-lg shadow-inner">
                         {campaign.businessName?.[0] || 'B'}
                     </div>
                     <div>
-                        <h3 className="font-bold text-[#343C6A] text-sm line-clamp-1">{campaign.businessName || 'Business'}</h3>
-                        <p className="text-xs text-gray-500">{campaign.goal || 'Campaign'}</p>
+                        <h3 className="font-bold text-[#343C6A] text-base leading-tight">{campaign.businessName || 'Business Name'}</h3>
+                        <p className="text-xs text-gray-400 font-medium mt-0.5 flex items-center gap-1">
+                            <MapPin className="w-3 h-3" /> {campaign.location || 'Global'}
+                        </p>
                     </div>
                 </div>
-                {/* Status Badge is now mostly for Type in Browse mode */}
-                {type !== 'browse' && type !== 'recommended' && statusBadge}
+                {statusBadge}
             </div>
 
-            <h4 className="font-bold text-lg text-gray-800 mb-2 group-hover:text-[#2008b9] transition-colors line-clamp-1">{campaign.title}</h4>
-
-            {/* Detailed Chips */}
-            <div className="flex flex-wrap gap-2 mb-4">
-                {campaign.minFollowers && (
-                    <span className="flex items-center gap-1 text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded-md">
-                        <Users className="w-3 h-3" /> {campaign.minFollowers}+
+            {/* Campaign Title & Niche */}
+            <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 border border-gray-200 px-2 py-0.5 rounded-md">
+                        {campaign.niche || 'General'}
                     </span>
-                )}
-                {campaign.engagement && (
-                    <span className="flex items-center gap-1 text-[10px] font-bold bg-purple-50 text-purple-600 px-2 py-1 rounded-md">
-                        <CheckCircle className="w-3 h-3" /> {campaign.engagement} ER
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${campaign.type === 'Paid' ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-orange-50 text-orange-600 border border-orange-100'}`}>
+                        {campaign.type || 'Campaign'}
                     </span>
-                )}
-                <span className={`text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 ${campaign.type === 'Paid' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'}`}>
-                    <DollarSign className="w-3 h-3" /> {campaign.type || 'Paid'}
-                </span>
-            </div>
-
-            <p className="text-sm text-gray-500 mb-4 line-clamp-3 bg-gray-50 p-3 rounded-xl flex-grow font-medium leading-relaxed">
-                {campaign.description}
-            </p>
-
-            <div className="space-y-3 mb-6 mt-auto border-t pt-4">
-                <div className="flex items-center justify-between text-sm text-gray-600">
-                    <span className="text-gray-400 font-medium text-xs uppercase">Budget</span>
-                    <span className="font-bold text-[#343C6A] text-lg">₹{Math.round(parseInt(campaign.budget || 0) * 0.25)}</span>
                 </div>
-                {campaign.startDate && (
-                    <div className="flex items-center justify-between text-sm text-gray-600">
-                        <span className="text-gray-400 font-medium text-xs uppercase">Starts</span>
-                        <span className="font-bold text-gray-800 text-xs">{campaign.startDate}</span>
+                <h4 className="font-extrabold text-xl text-gray-800 leading-snug group-hover:text-[#2008b9] transition-colors line-clamp-2" title={campaign.title}>
+                    {campaign.title}
+                </h4>
+            </div>
+
+            {/* Requirements Grid */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide mb-1">Followers</p>
+                    <p className="font-bold text-gray-700 text-sm flex items-center gap-1.5">
+                        <Users className="w-4 h-4 text-blue-500" />
+                        {campaign.minFollowers ? `${(parseInt(campaign.minFollowers) / 1000).toFixed(1)}k+` : 'Any'}
+                    </p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide mb-1">Engagement</p>
+                    <p className="font-bold text-gray-700 text-sm flex items-center gap-1.5">
+                        <CheckCircle className="w-4 h-4 text-purple-500" />
+                        {campaign.engagement ? `${campaign.engagement}%` : 'N/A'}
+                    </p>
+                </div>
+            </div>
+
+            {/* Budget / Value */}
+            <div className="mt-auto pt-5 border-t border-gray-100 flex items-center justify-between mb-6">
+                <div>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide mb-0.5">Budget</p>
+                    <p className="text-2xl font-extrabold text-[#343C6A]">
+                        ₹{Math.round(parseInt(campaign.budget || 0) * 0.25).toLocaleString()}
+                    </p>
+                </div>
+                {campaign.deadline && (
+                    <div className="text-right">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide mb-0.5">Deadline</p>
+                        <p className="text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded-md">
+                            {new Date(campaign.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        </p>
                     </div>
                 )}
             </div>
 
-            {(type === 'browse' || type === 'recommended') && (
-                <button
-                    onClick={() => onApply(campaign)}
-                    disabled={loading}
-                    className="w-full py-3 rounded-xl bg-[#2008b9] text-white font-bold hover:bg-blue-800 shadow-lg shadow-blue-200 transition-all disabled:opacity-50"
-                >
-                    {loading ? 'Applying...' : 'Apply Now'}
-                </button>
-            )}
+            {/* Action Buttons */}
+            <div className="grid grid-cols-1 gap-3">
+                {(type === 'browse' || type === 'recommended') && (
+                    <button
+                        onClick={() => onApply(campaign)}
+                        disabled={loading}
+                        className="w-full py-3.5 rounded-xl bg-[#2008b9] text-white font-bold hover:bg-blue-800 shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 disabled:hover:translate-y-0"
+                    >
+                        {loading ? <span className="flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Applying...</span> : 'Apply Now'}
+                    </button>
+                )}
 
-            {type === 'offers' && (
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => onReject(campaign)}
-                        disabled={loading}
-                        className="flex-1 py-3 rounded-xl border border-red-200 text-red-600 font-bold hover:bg-red-50 transition-all disabled:opacity-50"
-                    >
-                        {loading ? '...' : 'Reject'}
-                    </button>
-                    <button
-                        onClick={() => onAccept(campaign)}
-                        disabled={loading}
-                        className="flex-1 py-3 rounded-xl bg-[#2008b9] text-white font-bold hover:bg-blue-800 transition-all disabled:opacity-50"
-                    >
-                        {loading ? 'Accepting...' : 'Accept Offer'}
-                    </button>
-                </div>
-            )}
-            {type === 'applications' && (
-                <button disabled className="w-full py-3 rounded-xl bg-gray-100 text-gray-400 font-bold border border-transparent cursor-default">
-                    {statusBadge}
-                </button>
-            )}
+                {type === 'offers' && (
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => onReject(campaign)}
+                            disabled={loading}
+                            className="flex-1 py-3.5 rounded-xl border-2 border-red-100 text-red-600 font-bold hover:bg-red-50 hover:border-red-200 transition-all active:scale-95 disabled:opacity-50"
+                        >
+                            Reject
+                        </button>
+                        <button
+                            onClick={() => onAccept(campaign)}
+                            disabled={loading}
+                            className="flex-[2] py-3.5 rounded-xl bg-[#2008b9] text-white font-bold hover:bg-blue-800 shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5 active:scale-95 disabled:opacity-50"
+                        >
+                            Accept Offer
+                        </button>
+                    </div>
+                )}
+
+                {type === 'applications' && (
+                    <div className="w-full py-3.5 rounded-xl bg-gray-50 text-gray-500 font-bold text-center border border-gray-200 select-none flex items-center justify-center gap-2">
+                        {statusBadge}
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

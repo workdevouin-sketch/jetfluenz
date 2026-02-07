@@ -319,47 +319,7 @@ export default function InstagramStats({ predefinedUsername, userId, initialStat
                 />
             </div>
 
-            {/* 4. Top Tags */}
-            <div className="space-y-4">
-                <h4 className="text-gray-500 font-medium flex items-center gap-2">
-                    Most Used Hashtags <span className="text-gray-300 text-xs">ⓘ</span>
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                    {topHashtags.length > 0 ? (
-                        topHashtags.map(tag => (
-                            <span key={tag} className="px-3 py-1.5 bg-gray-500 text-white text-sm rounded-lg font-medium">
-                                {tag}
-                            </span>
-                        ))
-                    ) : (
-                        <p className="text-sm text-gray-400 italic">No hashtags found in recent posts.</p>
-                    )}
-                </div>
-            </div>
 
-            {/* 5. Top Performing Content (Gallery) */}
-            <div className="space-y-4">
-                <h4 className="text-gray-500 font-medium flex items-center gap-2">
-                    Top Performing Content <span className="text-gray-300 text-xs">ⓘ</span>
-                </h4>
-                <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
-                    {(data.profile.media?.data || []).slice(0, 5).map((media) => (
-                        <a
-                            key={media.id}
-                            href={media.permalink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="min-w-[70px] w-[70px] h-[70px] rounded-full overflow-hidden border-2 border-white shadow-md ring-2 ring-gray-100 hover:ring-blue-400 transition-all"
-                        >
-                            {media.media_type === 'VIDEO' ? (
-                                <video src={media.media_url} className="w-full h-full object-cover" />
-                            ) : (
-                                <img src={media.media_url} className="w-full h-full object-cover" alt="Post" />
-                            )}
-                        </a>
-                    ))}
-                </div>
-            </div>
 
         </div>
     );

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, Briefcase, DollarSign, Users, Settings, LogOut, TrendingUp } from 'lucide-react';
+import { LayoutGrid, Briefcase, DollarSign, Users, Settings, LogOut, TrendingUp, BookOpen } from 'lucide-react';
 
 const Sidebar = ({ role = 'influencer' }) => {
     const pathname = usePathname();
@@ -26,6 +26,7 @@ const Sidebar = ({ role = 'influencer' }) => {
             { name: 'Affiliate', href: `${basePath}/affiliate`, icon: TrendingUp },
             { name: 'Earnings', href: `${basePath}/earnings`, icon: DollarSign },
             { name: 'Settings', href: `${basePath}/settings`, icon: Settings },
+            { name: 'JLearn', href: `${basePath}/jlearn`, icon: BookOpen },
         ];
     }
 

@@ -44,7 +44,7 @@ export default function BusinessDashboard() {
 
     // Helper to get display name
     const getDisplayName = () => {
-        if (!userData) return 'Business';
+        if (!userData) return '';
         return userData.companyName || userData.name || 'Business';
     };
 
@@ -54,7 +54,9 @@ export default function BusinessDashboard() {
                 {/* Header Actions */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-3xl font-bold text-[#343C6A]">Welcome, {getDisplayName()} 👋</h2>
+                        <h2 className="text-3xl font-bold text-[#343C6A] flex items-center gap-2">
+                            Welcome, {loading ? <span className="animate-pulse bg-gray-200 h-8 w-32 rounded-lg inline-block"></span> : getDisplayName() + ' 👋'}
+                        </h2>
                         <p className="text-gray-500 mt-1">Manage your influencer campaigns.</p>
                     </div>
                     <button

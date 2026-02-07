@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { addUserFromAdmin, updateWaitlistUser } from '@/lib/waitlist';
 import { BarChart2 } from 'lucide-react';
+import LocationAutocompleteAdmin from '../LocationAutocompleteAdmin';
 
 export default function AddUserModal({ onClose, onSuccess, initialUser = null }) {
     const [formData, setFormData] = useState({
@@ -114,7 +115,16 @@ export default function AddUserModal({ onClose, onSuccess, initialUser = null })
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Niche</label>
-                                        <input name="niche" value={formData.niche || ''} onChange={handleInputChange} className="w-full p-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#2008b9]" />
+                                        <select name="niche" value={formData.niche || ''} onChange={handleInputChange} className="w-full p-3 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-[#2008b9] bg-white">
+                                            <option value="">Select Niche</option>
+                                            <option value="Fashion">Fashion</option>
+                                            <option value="Beauty">Beauty</option>
+                                            <option value="Tech">Tech</option>
+                                            <option value="Lifestyle">Lifestyle</option>
+                                            <option value="Fitness">Fitness</option>
+                                            <option value="Travel">Travel</option>
+                                            <option value="Food">Food</option>
+                                        </select>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
@@ -130,17 +140,26 @@ export default function AddUserModal({ onClose, onSuccess, initialUser = null })
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Age Group</label>
-                                        <input name="age" value={formData.age || ''} onChange={handleInputChange} className="w-full p-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#2008b9]" />
+                                        <select name="age" value={formData.age || ''} onChange={handleInputChange} className="w-full p-3 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-[#2008b9] bg-white">
+                                            <option value="">Select Age</option>
+                                            <option value="18-24">18-24</option>
+                                            <option value="25-34">25-34</option>
+                                            <option value="35-44">35-44</option>
+                                            <option value="45-54">45-54</option>
+                                            <option value="55-64">55-64</option>
+                                            <option value="65+">65+</option>
+                                        </select>
                                     </div>
-                                    <div>
+                                    <div className="relative">
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                                        <input name="location" value={formData.location || ''} onChange={handleInputChange} className="w-full p-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#2008b9]" />
+                                        <LocationAutocompleteAdmin
+                                            value={formData.location || ''}
+                                            onChange={handleInputChange}
+                                            placeholder="City, Country"
+                                        />
                                     </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Portfolio</label>
-                                    <input name="portfolio" value={formData.portfolio || ''} onChange={handleInputChange} className="w-full p-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#2008b9]" />
-                                </div>
+
                             </div>
                         ) : (
                             <div className="space-y-4">
@@ -186,7 +205,7 @@ export default function AddUserModal({ onClose, onSuccess, initialUser = null })
                         <button type="submit" className="px-4 py-2 bg-[#2008b9] text-white font-bold rounded-lg hover:bg-blue-800">{initialUser ? 'Update' : 'Save'}</button>
                     </div>
                 </form>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

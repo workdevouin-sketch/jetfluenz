@@ -60,7 +60,11 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
     };
 
     const handleChange = (e) => {
-        setData({ ...data, [e.target.name]: e.target.value });
+        let value = e.target.value;
+        if (e.target.name === 'instagram') {
+            value = value.replace(/@/g, '');
+        }
+        setData({ ...data, [e.target.name]: value });
     };
 
     const currentStepId = STEPS[currentStep].id;
@@ -102,9 +106,9 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                                 <Users className="w-5 h-5 mr-2 text-blue-300" /> Who are you?
                             </h3>
                             <div className="space-y-4">
-                                <Input label="Full Name" name="name" value={data.name} onChange={handleChange} placeholder="Jane Doe" tooltip="Your legal name or display name." />
-                                <Input label="Email Address" type="email" name="email" value={data.email} onChange={handleChange} placeholder="jane@example.com" tooltip="Used for invite codes and notifications." />
-                                <Input label="Phone Number" type="tel" name="phone" value={data.phone} onChange={handleChange} placeholder="+1 (555) 000-0000" tooltip="For urgent account updates." />
+                                <Input label="Full Name" name="name" value={data.name} onChange={handleChange} placeholder="Jane Doe" tooltip="Enter your legal name or the name you use for business." />
+                                <Input label="Email Address" type="email" name="email" value={data.email} onChange={handleChange} placeholder="jane@example.com" tooltip="We'll send campaign invites and notifications here." />
+                                <Input label="Phone Number" type="tel" name="phone" value={data.phone} onChange={handleChange} placeholder="+1 (555) 000-0000" tooltip="For urgent campaign updates or account verification." />
                             </div>
                         </motion.div>
                     )}
@@ -121,12 +125,12 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                                 <Instagram className="w-5 h-5 mr-2 text-blue-300" /> Social Presence
                             </h3>
                             <div className="space-y-4">
-                                <Input label="Instagram ID" name="instagram" value={data.instagram} onChange={handleChange} placeholder="@username" tooltip="Your main content profile." />
+                                <Input label="Instagram ID" name="instagram" value={data.instagram} onChange={handleChange} placeholder="username" tooltip="Your main Instagram handle where you post content." />
 
                                 <div className="flex flex-col space-y-2">
                                     <div className="flex items-center">
                                         <label className="text-sm font-medium text-white/80">Primary Niche</label>
-                                        <InfoTooltip text="Your primary content category." />
+                                        <InfoTooltip text="Select the category that best describes your content style." />
                                     </div>
                                     <select
                                         name="niche"
@@ -163,7 +167,7 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                                 <div className="flex flex-col space-y-2">
                                     <div className="flex items-center">
                                         <label className="text-sm font-medium text-white/80">Age Group</label>
-                                        <InfoTooltip text="Used for demographic targeting." />
+                                        <InfoTooltip text="Helps us match you with campaigns targeting specific demographics." />
                                     </div>
                                     <select
                                         name="age"
@@ -185,14 +189,14 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                                     value={data.location}
                                     onChange={handleChange}
                                     placeholder="City, Country"
-                                    tooltip="Helps match you with local campaigns."
+                                    tooltip="Enter your city to find local collaboration opportunities."
                                 />
                             </div>
-                            <Input label="Portfolio / Media Kit URL" name="portfolio" value={data.portfolio} onChange={handleChange} placeholder="Link to your work" tooltip="Link to your media kit or past work." />
+
                             <div className="flex flex-col space-y-3">
                                 <div className="flex items-center">
                                     <label className="text-sm font-medium text-white/80">Preferred Campaign Types</label>
-                                    <InfoTooltip text="Types of deals you are interested in." />
+                                    <InfoTooltip text="Select the types of collaborations you are most interested in." />
                                 </div>
                                 <CampaignTypeSelector
                                     value={data.campaignTypes}

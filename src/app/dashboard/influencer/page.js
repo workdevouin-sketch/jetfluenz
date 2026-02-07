@@ -215,6 +215,31 @@ export default function InfluencerDashboard() {
                             )}
                         </div>
 
+                        {/* Top Performing Content */}
+                        {userData?.instagram_stats?.profile?.media?.data?.length > 0 && (
+                            <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
+                                <h3 className="text-xl font-bold text-[#343C6A] mb-6">Top Performing Content</h3>
+                                <div className="flex gap-6 overflow-x-auto pb-2 scrollbar-hide justify-start">
+                                    {(userData.instagram_stats.profile.media.data || []).slice(0, 3).map((media) => (
+                                        <a
+                                            key={media.id}
+                                            href={media.permalink}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="relative min-w-[120px] w-[120px] h-[120px] rounded-full overflow-hidden border-4 border-white shadow-lg ring-1 ring-gray-100 hover:ring-blue-500 transition-all transform hover:scale-105 group"
+                                        >
+                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors z-10" />
+                                            {media.media_type === 'VIDEO' ? (
+                                                <video src={media.media_url} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <img src={media.media_url} className="w-full h-full object-cover" alt="Post" />
+                                            )}
+                                        </a>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                     </div>
 
                     {/* RIGHT COLUMN (2/5 width - roughly 40%) */}
