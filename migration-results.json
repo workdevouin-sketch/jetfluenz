@@ -1,0 +1,226 @@
+[
+  {
+    "email": "safnashoukkath@gmail.com",
+    "status": "created",
+    "authUid": "0r1Dc50vV7BbAkWoMdeG",
+    "firestoreId": "0r1Dc50vV7BbAkWoMdeG",
+    "initialPassword": "0r1Dc50vV7BbAkWoMdeG"
+  },
+  {
+    "email": "sangeethasangu9090@gmail.com",
+    "status": "created",
+    "authUid": "5RGM1fn4OW2g7OdvINxO",
+    "firestoreId": "5RGM1fn4OW2g7OdvINxO",
+    "initialPassword": "5RGM1fn4OW2g7OdvINxO"
+  },
+  {
+    "email": "jrkhushichandran@gmail.com",
+    "status": "created",
+    "authUid": "5SS8Q0OOAhY1zDcnQeiU",
+    "firestoreId": "5SS8Q0OOAhY1zDcnQeiU",
+    "initialPassword": "5SS8Q0OOAhY1zDcnQeiU"
+  },
+  {
+    "email": "mekssun@gmail.com",
+    "status": "created",
+    "authUid": "61ZUMBnsHL22bIitg5qm",
+    "firestoreId": "61ZUMBnsHL22bIitg5qm",
+    "initialPassword": "61ZUMBnsHL22bIitg5qm"
+  },
+  {
+    "email": "anagh.r.in@gmail.com",
+    "status": "created",
+    "authUid": "6iOGoyEnrdlNQuXQtpRY",
+    "firestoreId": "6iOGoyEnrdlNQuXQtpRY",
+    "initialPassword": "6iOGoyEnrdlNQuXQtpRY"
+  },
+  {
+    "email": "tesminagrace77@gmail.com",
+    "status": "created",
+    "authUid": "94h8FHl9xVGI5nyIZW5P",
+    "firestoreId": "94h8FHl9xVGI5nyIZW5P",
+    "initialPassword": "94h8FHl9xVGI5nyIZW5P"
+  },
+  {
+    "email": "itsathirapillai@gmail.com",
+    "status": "created",
+    "authUid": "9hmJ1kZvUIIqtSS6voRW",
+    "firestoreId": "9hmJ1kZvUIIqtSS6voRW",
+    "initialPassword": "9hmJ1kZvUIIqtSS6voRW"
+  },
+  {
+    "email": "amalchandtp@gmail.com",
+    "status": "created",
+    "authUid": "B7T93qoDVa4G7CEsK4ei",
+    "firestoreId": "B7T93qoDVa4G7CEsK4ei",
+    "initialPassword": "B7T93qoDVa4G7CEsK4ei"
+  },
+  {
+    "email": "anagh.r.in@gmail.com",
+    "status": "exists",
+    "authUid": "6iOGoyEnrdlNQuXQtpRY",
+    "firestoreId": "BoQ4K608So54j0HBEVmP"
+  },
+  {
+    "email": "pravven.@gmail.com",
+    "status": "error",
+    "error": "The email address is improperly formatted.",
+    "firestoreId": "C6xWdVqstrsR1yTYesvo"
+  },
+  {
+    "email": "majabipomo@gmail.com",
+    "status": "created",
+    "authUid": "FYJh8dlCd7iroibRuNvn",
+    "firestoreId": "FYJh8dlCd7iroibRuNvn",
+    "initialPassword": "FYJh8dlCd7iroibRuNvn"
+  },
+  {
+    "email": "devou.in@gmail.com",
+    "status": "exists",
+    "authUid": "LuSKbVT7cdd91YYLMBwCYpAVpIo1",
+    "firestoreId": "LuSKbVT7cdd91YYLMBwCYpAVpIo1"
+  },
+  {
+    "email": "sinanicru9@gmail.com",
+    "status": "created",
+    "authUid": "M6vYFkBwi7qyJI2SM7OY",
+    "firestoreId": "M6vYFkBwi7qyJI2SM7OY",
+    "initialPassword": "M6vYFkBwi7qyJI2SM7OY"
+  },
+  {
+    "email": "sumitgulatiofficial@gmail.com",
+    "status": "created",
+    "authUid": "NHQpXdKOqpkRG04or2dw",
+    "firestoreId": "NHQpXdKOqpkRG04or2dw",
+    "initialPassword": "NHQpXdKOqpkRG04or2dw"
+  },
+  {
+    "email": "sabithparikkatt@gmail.com",
+    "status": "created",
+    "authUid": "NQnAFiP75PRDnooqPSWn",
+    "firestoreId": "NQnAFiP75PRDnooqPSWn",
+    "initialPassword": "NQnAFiP75PRDnooqPSWn"
+  },
+  {
+    "email": "fazifld92@gmail.com",
+    "status": "created",
+    "authUid": "OT0sKQcGIB8W6BQyDwdy",
+    "firestoreId": "OT0sKQcGIB8W6BQyDwdy",
+    "initialPassword": "OT0sKQcGIB8W6BQyDwdy"
+  },
+  {
+    "email": "shezin1133@gmail.com",
+    "status": "created",
+    "authUid": "OdY6oG5YOQ6R4n0YACVD",
+    "firestoreId": "OdY6oG5YOQ6R4n0YACVD",
+    "initialPassword": "OdY6oG5YOQ6R4n0YACVD"
+  },
+  {
+    "email": "alanjohnchacko.live@gmail.com",
+    "status": "created",
+    "authUid": "TMETvF5RXY4jVVsUHO9X",
+    "firestoreId": "TMETvF5RXY4jVVsUHO9X",
+    "initialPassword": "TMETvF5RXY4jVVsUHO9X"
+  },
+  {
+    "email": "salmansalmu722@gmail.com",
+    "status": "created",
+    "authUid": "UUTCuQZQzcLi5aoFHxtr",
+    "firestoreId": "UUTCuQZQzcLi5aoFHxtr",
+    "initialPassword": "UUTCuQZQzcLi5aoFHxtr"
+  },
+  {
+    "email": "afreen.abi26@gmail.com",
+    "status": "created",
+    "authUid": "WeJD2bMI9UEh5e20dDZu",
+    "firestoreId": "WeJD2bMI9UEh5e20dDZu",
+    "initialPassword": "WeJD2bMI9UEh5e20dDZu"
+  },
+  {
+    "email": "nashk24@gmail.com",
+    "status": "created",
+    "authUid": "YOcYdUhHewyGGCmFllcw",
+    "firestoreId": "YOcYdUhHewyGGCmFllcw",
+    "initialPassword": "YOcYdUhHewyGGCmFllcw"
+  },
+  {
+    "email": "alanjohnchacko.mec@gmail.com",
+    "status": "created",
+    "authUid": "YQqOkpCSbH8tU2tBI2tT",
+    "firestoreId": "YQqOkpCSbH8tU2tBI2tT",
+    "initialPassword": "YQqOkpCSbH8tU2tBI2tT"
+  },
+  {
+    "email": "alfaashanavas2005@gmail.com",
+    "status": "created",
+    "authUid": "ZF8IO3DyTTfVfysPUf9Q",
+    "firestoreId": "ZF8IO3DyTTfVfysPUf9Q",
+    "initialPassword": "ZF8IO3DyTTfVfysPUf9Q"
+  },
+  {
+    "email": "athullashrafff@gmail.com",
+    "status": "created",
+    "authUid": "bHrS9QFWGoHcpVsCEssp",
+    "firestoreId": "bHrS9QFWGoHcpVsCEssp",
+    "initialPassword": "bHrS9QFWGoHcpVsCEssp"
+  },
+  {
+    "email": "fibasherink@gmail.com",
+    "status": "created",
+    "authUid": "cPchmBc8oHVjTeXQOMt5",
+    "firestoreId": "cPchmBc8oHVjTeXQOMt5",
+    "initialPassword": "cPchmBc8oHVjTeXQOMt5"
+  },
+  {
+    "email": "nashk24@gmail.com",
+    "status": "exists",
+    "authUid": "YOcYdUhHewyGGCmFllcw",
+    "firestoreId": "fBT6orfMfpw10XtYDLPj"
+  },
+  {
+    "email": "alfaashanavas2005@gmail.com",
+    "status": "exists",
+    "authUid": "ZF8IO3DyTTfVfysPUf9Q",
+    "firestoreId": "jVS5tI4KqtwvaFNrFops"
+  },
+  {
+    "email": "arshad514826@gmail.com",
+    "status": "created",
+    "authUid": "mC0k3yDcwqBQt1oftsI7",
+    "firestoreId": "mC0k3yDcwqBQt1oftsI7",
+    "initialPassword": "mC0k3yDcwqBQt1oftsI7"
+  },
+  {
+    "email": "faheema7086@gmail.com",
+    "status": "created",
+    "authUid": "nJHWW1jmznYiVnWdWC1x",
+    "firestoreId": "nJHWW1jmznYiVnWdWC1x",
+    "initialPassword": "nJHWW1jmznYiVnWdWC1x"
+  },
+  {
+    "email": "anagh.r.in@gmail.com",
+    "status": "exists",
+    "authUid": "6iOGoyEnrdlNQuXQtpRY",
+    "firestoreId": "pjTUPtGxhnLQXx9eFk7I"
+  },
+  {
+    "email": "cabocabskerala@gmail.com",
+    "status": "created",
+    "authUid": "tNwMrj2iFwMw6DoJM9EX",
+    "firestoreId": "tNwMrj2iFwMw6DoJM9EX",
+    "initialPassword": "tNwMrj2iFwMw6DoJM9EX"
+  },
+  {
+    "email": "afreen.abi26@gmail.com",
+    "status": "exists",
+    "authUid": "WeJD2bMI9UEh5e20dDZu",
+    "firestoreId": "vcAFIICRUex1HXKXdeZ4"
+  },
+  {
+    "email": "ayshanirmil@gmail.com",
+    "status": "created",
+    "authUid": "w4COrdEUFwd0hPTJWG20",
+    "firestoreId": "w4COrdEUFwd0hPTJWG20",
+    "initialPassword": "w4COrdEUFwd0hPTJWG20"
+  }
+]

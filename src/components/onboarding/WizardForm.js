@@ -7,8 +7,7 @@ import StepRoleSelection from './StepRoleSelection';
 import StepInfluencer from './StepInfluencer';
 import StepBusiness from './StepBusiness';
 import SuccessScreen from './SuccessScreen';
-import { db } from '../../lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { handleSignupFlow } from '../../lib/waitlist';
 
 export default function WizardForm({ isOpen, onClose }) {
     const [step, setStep] = useState('role'); // roles, influencer, business, success
@@ -30,20 +29,16 @@ export default function WizardForm({ isOpen, onClose }) {
         const completeData = {
             ...formData,
             ...finalData,
-            role,
-            submittedAt: serverTimestamp(),
-            createdAt: serverTimestamp(),
-            status: 'waitlist'
+            role
         };
 
         try {
-            if (db) {
-                await addDoc(collection(db, 'users'), completeData);
+            const result = await handleSignupFlow(completeData);
+            if (result.success) {
+                setStep('success');
             } else {
-                console.log('Firebase not initialized, mocking submission:', completeData);
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                alert('Error: ' + result.error);
             }
-            setStep('success');
         } catch (error) {
             console.error('Error submitting form:', error);
             alert('Something went wrong. Please try again.');
