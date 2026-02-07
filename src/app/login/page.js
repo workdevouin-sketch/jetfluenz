@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
@@ -10,27 +10,60 @@ import { getAuthErrorMessage } from '@/lib/auth/helpers';
 export default function LoginPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { login, isAuthenticated, getUserDashboard, loading: authLoading } = useAuth();
+    const { login, isAuthenticated, userData, getUserDashboard, loading: authLoading } = useAuth();
+    const timeoutRef = useRef(null);
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [showPasswordReset, setShowPasswordReset] = useState(false);
 
-    // Check for session expiration message
+    // Check for session expiration or error messages
     useEffect(() => {
-        if (searchParams.get('expired') === 'true') {
+        const expired = searchParams.get('expired') === 'true';
+        const errorParam = searchParams.get('error');
+
+        if (expired) {
             setError('Your session has expired. Please log in again.');
+        } else if (errorParam === 'pending') {
+            setError('Your account is pending approval. You will be notified once it is active.');
+        } else if (errorParam === 'banned') {
+            setError('This account has been suspended.');
         }
+
+        // Cleanup timeout on unmount
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
     }, [searchParams]);
 
-    // Redirect if already authenticated
+    // Redirect if already authenticated AND userData is loaded
     useEffect(() => {
-        if (!authLoading && isAuthenticated) {
-            router.push(getUserDashboard());
+        console.log('Login redirect check:', {
+            authLoading,
+            isAuthenticated,
+            hasRole: !!userData?.role,
+            role: userData?.role,
+            dashboardRoute: userData?.role ? getUserDashboard() : 'N/A'
+        });
+
+        if (!authLoading && isAuthenticated && userData?.role) {
+            const dashboardRoute = getUserDashboard();
+            console.log('Redirecting to:', dashboardRoute);
+
+            // Clear the timeout since we're redirecting successfully
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+                timeoutRef.current = null;
+            }
+
+            if (dashboardRoute !== '/') {
+                router.push(dashboardRoute);
+            }
         }
-    }, [isAuthenticated, authLoading, router, getUserDashboard]);
+    }, [isAuthenticated, authLoading, userData, router, getUserDashboard]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -41,9 +74,14 @@ export default function LoginPage() {
             const result = await login(email, password);
 
             if (result.success) {
+                // Set a timeout fallback in case userData doesn't load
+                timeoutRef.current = setTimeout(() => {
+                    setLoading(false);
+                    setError('Login successful but unable to load user data. Please refresh the page.');
+                }, 5000); // 5 second timeout
+
                 // AuthContext will handle user data fetching
-                // Redirect will happen via useEffect above
-                router.push(getUserDashboard());
+                // The useEffect will handle the redirect once userData is loaded
             } else {
                 // Display user-friendly error message
                 setError(getAuthErrorMessage(result.error));
@@ -65,7 +103,7 @@ export default function LoginPage() {
         );
     }
 
-    if (isAuthenticated) {
+    if (isAuthenticated && userData?.role) {
         return null; // Will redirect via useEffect
     }
 
@@ -146,13 +184,12 @@ export default function LoginPage() {
                         </button>
 
                         <div className="text-center">
-                            <button
-                                type="button"
-                                onClick={() => setShowPasswordReset(true)}
+                            <Link
+                                href="/reset-password"
                                 className="text-gray-400 hover:text-[#2008b9] text-sm transition-colors"
                             >
                                 Forgot Password?
-                            </button>
+                            </Link>
                         </div>
                     </form>
 
@@ -164,97 +201,6 @@ export default function LoginPage() {
                         </p>
                     </div>
                 </div>
-            </div>
-
-            {/* Password Reset Modal */}
-            {showPasswordReset && (
-                <PasswordResetModal onClose={() => setShowPasswordReset(false)} />
-            )}
-        </div>
-    );
-}
-
-// Password Reset Modal Component
-function PasswordResetModal({ onClose }) {
-    const { resetPassword } = useAuth();
-    const [email, setEmail] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [success, setSuccess] = useState(false);
-    const [error, setError] = useState('');
-
-    const handleReset = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
-
-        const result = await resetPassword(email);
-
-        if (result.success) {
-            setSuccess(true);
-        } else {
-            setError(getAuthErrorMessage(result.error));
-        }
-        setLoading(false);
-    };
-
-    return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl p-8 max-w-md w-full">
-                <h3 className="text-2xl font-bold text-[#343C6A] mb-4">Reset Password</h3>
-
-                {success ? (
-                    <div className="space-y-4">
-                        <div className="bg-green-50 text-green-600 p-4 rounded-lg text-sm">
-                            Password reset email sent! Check your inbox.
-                        </div>
-                        <button
-                            onClick={onClose}
-                            className="w-full bg-[#2008b9] text-white font-bold py-3 rounded-xl"
-                        >
-                            Close
-                        </button>
-                    </div>
-                ) : (
-                    <form onSubmit={handleReset} className="space-y-4">
-                        {error && (
-                            <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm">
-                                {error}
-                            </div>
-                        )}
-
-                        <p className="text-gray-600 text-sm">
-                            Enter your email address and we'll send you a link to reset your password.
-                        </p>
-
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Email Address"
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2008b9]"
-                            required
-                            disabled={loading}
-                        />
-
-                        <div className="flex gap-3">
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="flex-1 border border-gray-200 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-50"
-                                disabled={loading}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                className="flex-1 bg-[#2008b9] text-white font-bold py-3 rounded-xl hover:bg-blue-800 disabled:opacity-70"
-                                disabled={loading}
-                            >
-                                {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Send Reset Link'}
-                            </button>
-                        </div>
-                    </form>
-                )}
             </div>
         </div>
     );

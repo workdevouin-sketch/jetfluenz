@@ -19,6 +19,9 @@ export function getAuthErrorMessage(errorCode) {
         'auth/operation-not-allowed': 'This operation is not allowed.',
         'auth/invalid-credential': 'Invalid credentials. Please check your email and password.',
         'auth/account-exists-with-different-credential': 'An account already exists with this email.',
+        'auth/invalid-action-code': 'The reset link is invalid or has already been used.',
+        'auth/expired-action-code': 'The reset link has expired. Please request a new one.',
+        'auth/not-approved': 'Your account is pending approval. You will be notified once it is active.',
     };
 
     return errorMessages[errorCode] || 'An error occurred. Please try again.';

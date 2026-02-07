@@ -6,7 +6,9 @@ import {
     signInWithEmailAndPassword,
     signOut,
     sendPasswordResetEmail,
-    createUserWithEmailAndPassword
+    createUserWithEmailAndPassword,
+    confirmPasswordReset,
+    verifyPasswordResetCode
 } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
@@ -70,7 +72,19 @@ export function AuthProvider({ children }) {
     const login = async (email, password) => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            return { success: true, user: userCredential.user };
+            const firebaseUser = userCredential.user;
+
+            // Check approval status in Firestore
+            const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+            if (userDoc.exists()) {
+                const data = userDoc.data();
+                if (data.role !== 'admin' && data.status !== 'approved') {
+                    await signOut(auth); // Log them out immediately
+                    return { success: false, error: 'auth/not-approved' };
+                }
+            }
+
+            return { success: true, user: firebaseUser };
         } catch (error) {
             console.error('Login error:', error);
             return { success: false, error: error.code };
@@ -108,6 +122,32 @@ export function AuthProvider({ children }) {
     };
 
     /**
+     * Verify password reset code
+     */
+    const verifyResetCode = async (code) => {
+        try {
+            const email = await verifyPasswordResetCode(auth, code);
+            return { success: true, email };
+        } catch (error) {
+            console.error('Verify reset code error:', error);
+            return { success: false, error: error.code };
+        }
+    };
+
+    /**
+     * Confirm password reset
+     */
+    const confirmResetPassword = async (code, newPassword) => {
+        try {
+            await confirmPasswordReset(auth, code, newPassword);
+            return { success: true };
+        } catch (error) {
+            console.error('Confirm password reset error:', error);
+            return { success: false, error: error.code };
+        }
+    };
+
+    /**
      * Create new user (admin only)
      */
     const createUser = async (email, password) => {
@@ -135,13 +175,15 @@ export function AuthProvider({ children }) {
         login,
         logout,
         resetPassword,
+        verifyResetCode,
+        confirmResetPassword,
         createUser,
         getUserDashboard,
         // Convenience flags
-        isAuthenticated: !!user,
+        isAuthenticated: !!user && (userData?.status === 'approved' || userData?.role === 'admin'),
         isAdmin: userData?.role === 'admin',
-        isBusiness: userData?.role === 'business',
-        isInfluencer: userData?.role === 'influencer'
+        isBusiness: userData?.role === 'business' && userData?.status === 'approved',
+        isInfluencer: userData?.role === 'influencer' && userData?.status === 'approved'
     };
 
     return (
