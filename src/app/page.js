@@ -8,8 +8,11 @@ import LaunchTile from '../components/solution-tiles/LaunchTile'
 import MatchTile from '../components/solution-tiles/MatchTile'
 import TrackTile from '../components/solution-tiles/TrackTile'
 import DashboardCard from '@/components/landing/DashboardCard';
+import HeroDashboardPreview from '@/components/landing/HeroDashboardPreview';
+import InteractiveHeroGrid from '@/components/InteractiveHeroGrid';
 import { Analytics } from "@vercel/analytics/next"
 import ForWhomCard from '../components/landing/ForWhomCard'
+import ClientsBanner from '../components/ClientsBanner'
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true)
@@ -228,54 +231,51 @@ export default function Home() {
           </div>
 
           <div className="container mx-auto relative z-10">
-            <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-              <div className="text-center lg:text-left">
-                <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-white mb-4 md:mb-6 leading-tight animate-fade-in-left">
+            <div className="grid lg:grid-cols-2 gap-8 lg:gap-20 items-center">
+
+              {/* Left Column: Text Content */}
+              <div className="text-left w-full max-w-2xl">
+                <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-7xl font-bold text-white mb-6 md:mb-8 leading-tight animate-fade-in-left tracking-tight">
                   Jetfluenz
                 </h1>
-                <p className="text-lg sm:text-xl text-white/80 mb-6 md:mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed animate-fade-in-left" style={{ animationDelay: '0.2s', opacity: 0 }}>
+                <p className="text-lg sm:text-xl md:text-2xl text-white/80 mb-8 md:mb-12 leading-relaxed animate-fade-in-left" style={{ animationDelay: '0.2s', opacity: 0 }}>
                   connects <span className="text-yellow-300 font-semibold">micro-influencers</span> with <span className="text-blue-300 font-semibold">businesses</span> to create <span className="text-green-300 font-semibold">authentic campaigns</span> that <span className="text-pink-300 font-semibold">convert</span>.
                 </p>
-                <button
-                  onClick={() => setIsWaitlistModalOpen(true)}
-                  className="bg-white text-black px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold hover:bg-gray-50 transition-all duration-300 shadow-lg animate-fade-in-up relative overflow-hidden group border-2 border-transparent hover:border-[#ff5757]/30" style={{ animationDelay: '0.4s', opacity: 0 }}>
-                  <span className="relative z-10">Join Waitlist</span>
-                  <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-[#ff5757] transition-all duration-500 animate-border-travel"></div>
-                </button>
-              </div>
-
-              <div className="relative h-80 sm:h-96 flex items-center justify-center mt-8 lg:mt-0">
-                {/* 2x2 Grid Layout */}
-                <div className="grid grid-cols-2 grid-rows-2 gap-3 sm:gap-4 w-full h-full max-w-sm sm:max-w-lg">
-                  {/* First image - spans 2 rows (left column) */}
-                  <div className="row-span-2">
-                    <img
-                      src="/card1-hero.png"
-                      alt="Hero card 1"
-                      className="w-full h-full object-cover rounded-2xl shadow-lg animate-blur-to-clear"
-                    />
-                  </div>
-
-                  {/* Second image - top right */}
-                  <div className="row-span-1">
-                    <img
-                      src="/card2-hero.png"
-                      alt="Hero card 2"
-                      className="w-full h-full object-cover rounded-2xl shadow-lg animate-blur-to-clear"
-                    />
-                  </div>
-
-                  {/* Third image - bottom right */}
-                  <div className="row-span-1">
-                    <img
-                      src="/card3-hero.png"
-                      alt="Hero card 3"
-                      className="w-full h-full object-cover rounded-2xl shadow-lg animate-blur-to-clear"
-                    />
-                  </div>
+                <div className="animate-fade-in-up" style={{ animationDelay: '0.4s', opacity: 0 }}>
+                  <button
+                    onClick={() => setIsWaitlistModalOpen(true)}
+                    className="bg-white text-black px-8 py-4 rounded-full font-bold text-lg hover:scale-105 hover:bg-gray-50 transition-all duration-300 shadow-xl shadow-blue-900/20 relative overflow-hidden group border-2 border-transparent hover:border-[#ff5757]/30">
+                    <span className="relative z-10">Join Waitlist</span>
+                    <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-[#ff5757] transition-all duration-500 animate-border-travel"></div>
+                  </button>
+                  <p className="text-white/40 text-sm mt-4 ml-2">No credit card required.</p>
                 </div>
               </div>
+
+              {/* Right Column: Dashboard Visualization */}
+              <div className="hidden lg:block animate-fade-in-right relative" style={{ animationDelay: '0.4s', opacity: 0 }}>
+                {/* Decorative glow behind dashboard */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-blue-500/20 blur-3xl rounded-full -z-10 pointer-events-none"></div>
+                <HeroDashboardPreview />
+              </div>
+
             </div>
+          </div>
+
+        </section>
+
+        {/* Clients Banner */}
+        <ClientsBanner />
+
+        {/* Trending Campaigns Grid Section */}
+        <section className="py-12 bg-[#2008b9]">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl md:text-5xl font-bold text-white relative inline-block">
+                Trending Campaigns<span className="text-[#ff5757]">.</span>
+              </h2>
+            </div>
+            <InteractiveHeroGrid />
           </div>
         </section>
 
@@ -332,10 +332,10 @@ export default function Home() {
 
             </div>
           </div>
-        </section>
+        </section >
 
         {/* Our Solution Section */}
-        <section id="solution" className="py-20 px-4 md:px-6 bg-[#2008b9] min-h-screen flex items-center">
+        < section id="solution" className="py-20 px-4 md:px-6 bg-[#2008b9] min-h-screen flex items-center" >
           <div className="container mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-6xl font-bold text-white relative inline-block">
@@ -373,13 +373,13 @@ export default function Home() {
 
             </div>
           </div>
-        </section>
+        </section >
 
         {/* End Gradient Wrapper */}
-      </div>
+      </div >
 
       {/* Dashboard & Process Section */}
-      <section className="min-h-screen flex items-center py-12 md:py-24 px-4 md:px-6 bg-[#2008b9] overflow-hidden">
+      < section className="min-h-screen flex items-center py-12 md:py-24 px-4 md:px-6 bg-[#2008b9] overflow-hidden" >
         <div className="container mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
 
@@ -406,10 +406,10 @@ export default function Home() {
 
           </div>
         </div>
-      </section>
+      </section >
 
       {/* FAQ Section */}
-      <section className="py-20 px-6 bg-white">
+      < section className="py-20 px-6 bg-white" >
         <div className="container mx-auto">
           <h2 className="text-5xl font-bold text-gray-800 text-center mb-16">FAQ</h2>
           <div className="max-w-4xl mx-auto space-y-4">
@@ -543,10 +543,11 @@ export default function Home() {
 
           </div>
         </div>
-      </section>
+      </section >
 
       {/* Footer */}
-      <footer id="contact" style={{ backgroundColor: '#2008b9' }} className="py-12">
+      < footer id="contact" style={{ backgroundColor: '#2008b9' }
+      } className="py-12" >
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-white text-center md:text-left mb-6 md:mb-0">
@@ -593,7 +594,7 @@ export default function Home() {
             </p>
           </div>
         </div>
-      </footer>
+      </footer >
 
       {/* Waitlist Modal */}
       {/* Onboarding Wizard */}
@@ -604,6 +605,6 @@ export default function Home() {
 
       {/* Vercel Analytics */}
       <Analytics />
-    </div>
+    </div >
   )
 }
