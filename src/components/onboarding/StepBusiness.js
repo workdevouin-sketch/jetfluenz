@@ -85,7 +85,7 @@ export default function StepBusiness({ onSubmit, isSubmitting, initialData }) {
 
             {/* Form Content */}
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                <AnimatePresence mode="wait">
+                <AnimatePresence mode="popLayout">
                     {currentStepId === 'identity' && (
                         <motion.div
                             key="identity"
