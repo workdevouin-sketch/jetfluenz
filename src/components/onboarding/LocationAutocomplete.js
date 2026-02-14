@@ -102,7 +102,7 @@ export default function LocationAutocomplete({ label, value, onChange, placehold
     return (
         <div className="flex flex-col space-y-2 relative" ref={wrapperRef}>
             <div className="flex items-center">
-                <label className="text-sm font-medium text-white/80">{label}</label>
+                <label className="text-sm font-medium text-gray-700">{label}</label>
                 {tooltip && <InfoTooltip text={tooltip} />}
             </div>
             <div className="relative">
@@ -111,24 +111,24 @@ export default function LocationAutocomplete({ label, value, onChange, placehold
                     value={query}
                     onChange={handleInputChange}
                     placeholder={placeholder}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/50 focus:bg-white/10 transition-colors"
+                    className="w-full bg-white border border-gray-300 rounded-lg pl-10 pr-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#2008b9] focus:ring-1 focus:ring-[#2008b9] transition-all shadow-sm"
                 />
-                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/40" />
+                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
 
                 {isLoading && (
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <Loader2 className="w-4 h-4 text-white/40 animate-spin" />
+                        <Loader2 className="w-4 h-4 text-[#2008b9] animate-spin" />
                     </div>
                 )}
             </div>
 
             {isOpen && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 w-full z-50 mt-1 bg-[#1a1060] border border-white/10 rounded-lg shadow-xl overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
+                <div className="absolute top-full left-0 w-full z-50 mt-1 bg-white border border-gray-100 rounded-lg shadow-xl overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
                     {suggestions.map((place) => (
                         <button
                             key={place.place_id}
                             onClick={() => handleSelect(place)}
-                            className="w-full text-left px-4 py-3 text-sm text-white/80 hover:bg-white/10 hover:text-white transition-colors border-b border-white/5 last:border-0"
+                            className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors border-b border-gray-100 last:border-0"
                         >
                             {place.display_name}
                         </button>

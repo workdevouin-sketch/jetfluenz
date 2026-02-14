@@ -38,24 +38,24 @@ export default function CampaignTypeSelector({ value, onChange }) {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         className={`relative flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 h-32 text-center group ${isSelected
-                                ? 'bg-white/10 border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.2)]'
-                                : 'bg-white/5 border-white/10 hover:border-white/30 hover:bg-white/10'
+                            ? 'bg-[#2008b9]/5 border-[#2008b9] shadow-md shadow-[#2008b9]/10'
+                            : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                             }`}
                         type="button" // Prevent form submission
                     >
                         {isSelected && (
                             <div className="absolute top-2 right-2">
-                                <CheckCircle2 className="w-5 h-5 text-blue-400" />
+                                <CheckCircle2 className="w-5 h-5 text-[#2008b9]" />
                             </div>
                         )}
 
-                        <Icon className={`w-8 h-8 mb-3 ${isSelected ? 'text-blue-400' : 'text-white/60 group-hover:text-white/90'}`} />
+                        <Icon className={`w-8 h-8 mb-3 ${isSelected ? 'text-[#2008b9]' : 'text-gray-400 group-hover:text-[#2008b9]'}`} />
 
-                        <h4 className={`font-semibold text-sm mb-1 ${isSelected ? 'text-white' : 'text-white/80'}`}>
+                        <h4 className={`font-semibold text-sm mb-1 ${isSelected ? 'text-[#2008b9]' : 'text-gray-700 group-hover:text-gray-900'}`}>
                             {option.label}
                         </h4>
 
-                        <p className="text-[10px] text-white/50 leading-tight">
+                        <p className={`text-[10px] leading-tight ${isSelected ? 'text-[#2008b9]/80' : 'text-gray-500'}`}>
                             {option.description}
                         </p>
                     </motion.button>
