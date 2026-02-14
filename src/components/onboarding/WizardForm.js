@@ -15,6 +15,7 @@ export default function WizardForm({ isOpen, onClose }) {
     const [role, setRole] = useState(null);
     const [formData, setFormData] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLoading, setIsLoading] = useState(false); // New loading state
     const [error, setError] = useState('');
     const [showError, setShowError] = useState(false);
 
@@ -25,8 +26,13 @@ export default function WizardForm({ isOpen, onClose }) {
     };
 
     const handleRoleSelect = (selectedRole) => {
+        setIsLoading(true);
         setRole(selectedRole);
-        setStep(selectedRole); // 'influencer' or 'business'
+        // Simulate loading delay to prevent flicker/layout shift
+        setTimeout(() => {
+            setStep(selectedRole);
+            setIsLoading(false);
+        }, 600);
     };
 
     const handleDataUpdate = (data) => {
@@ -67,7 +73,7 @@ export default function WizardForm({ isOpen, onClose }) {
                         animate="visible"
                         exit="exit"
                         onClick={onClose}
-                        className="absolute inset-0 bg-[#2008b9]/80 backdrop-blur-md"
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                     />
 
                     {/* Toast Notification */}
@@ -104,46 +110,63 @@ export default function WizardForm({ isOpen, onClose }) {
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        className="relative w-full max-w-4xl bg-white/10 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                        className="relative w-full max-w-4xl bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header / Close Button */}
                         <div className="absolute top-4 right-4 z-10">
                             <button
                                 onClick={onClose}
-                                className="p-2 rounded-full hover:bg-white/10 transition-colors group"
+                                className="p-2 rounded-full hover:bg-gray-100 transition-colors group"
                             >
-                                <X className="w-6 h-6 text-white/50 group-hover:text-white transition-colors" />
+                                <X className="w-6 h-6 text-gray-400 group-hover:text-gray-900 transition-colors" />
                             </button>
                         </div>
 
                         {/* Content Area */}
-                        <div className="flex-1 flex flex-col p-6 sm:p-8 md:p-12 text-white overflow-y-auto custom-scrollbar">
-                            <AnimatePresence mode="wait" initial={false}>
-                                {step === 'role' && (
-                                    <StepRoleSelection key="role" onSelect={handleRoleSelect} />
-                                )}
+                        <div className="flex-1 flex flex-col p-6 sm:p-8 md:p-12 text-gray-900 overflow-y-auto custom-scrollbar relative">
+                            <AnimatePresence mode="wait">
+                                {isLoading ? (
+                                    <motion.div
+                                        key="loader"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="absolute inset-0 flex items-center justify-center bg-white z-20"
+                                    >
+                                        <div className="flex flex-col items-center gap-4">
+                                            <div className="w-12 h-12 border-4 border-[#2008b9]/20 border-t-[#2008b9] rounded-full animate-spin" />
+                                            <p className="text-[#2008b9] font-medium animate-pulse">Loading...</p>
+                                        </div>
+                                    </motion.div>
+                                ) : (
+                                    <>
+                                        {step === 'role' && (
+                                            <StepRoleSelection key="role" onSelect={handleRoleSelect} />
+                                        )}
 
-                                {step === 'influencer' && (
-                                    <StepInfluencer
-                                        key="influencer"
-                                        onSubmit={handleSubmit}
-                                        isSubmitting={isSubmitting}
-                                        initialData={formData}
-                                    />
-                                )}
+                                        {step === 'influencer' && (
+                                            <StepInfluencer
+                                                key="influencer"
+                                                onSubmit={handleSubmit}
+                                                isSubmitting={isSubmitting}
+                                                initialData={formData}
+                                            />
+                                        )}
 
-                                {step === 'business' && (
-                                    <StepBusiness
-                                        key="business"
-                                        onSubmit={handleSubmit}
-                                        isSubmitting={isSubmitting}
-                                        initialData={formData}
-                                    />
-                                )}
+                                        {step === 'business' && (
+                                            <StepBusiness
+                                                key="business"
+                                                onSubmit={handleSubmit}
+                                                isSubmitting={isSubmitting}
+                                                initialData={formData}
+                                            />
+                                        )}
 
-                                {step === 'success' && (
-                                    <SuccessScreen key="success" onClose={onClose} />
+                                        {step === 'success' && (
+                                            <SuccessScreen key="success" onClose={onClose} />
+                                        )}
+                                    </>
                                 )}
                             </AnimatePresence>
                         </div>

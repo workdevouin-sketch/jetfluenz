@@ -84,12 +84,12 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
             {/* Header & Progress */}
             <div className="mb-8">
                 <div className="flex items-center justify-between mb-2">
-                    <h2 className="text-2xl font-bold">Influencer Application</h2>
-                    <span className="text-sm text-white/50">Step {currentStep + 1} of {STEPS.length}</span>
+                    <h2 className="text-2xl font-bold text-gray-900">Influencer Application</h2>
+                    <span className="text-sm text-gray-500">Step {currentStep + 1} of {STEPS.length}</span>
                 </div>
-                <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                <div className="w-full h-1 bg-gray-200 rounded-full overflow-hidden">
                     <motion.div
-                        className="h-full bg-gradient-to-r from-blue-400 to-indigo-400"
+                        className="h-full bg-[#2008b9]"
                         initial={{ width: 0 }}
                         animate={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
                         transition={{ duration: 0.3 }}
@@ -110,8 +110,8 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                             exit="exit"
                             className="space-y-6"
                         >
-                            <motion.h3 variants={fadeInUp} initial="hidden" animate="show" className="text-xl font-semibold mb-6 flex items-center">
-                                <Users className="w-5 h-5 mr-2 text-blue-300" /> Who are you?
+                            <motion.h3 variants={fadeInUp} initial="hidden" animate="show" className="text-xl font-semibold mb-6 flex items-center text-gray-900">
+                                <Users className="w-5 h-5 mr-2 text-[#2008b9]" /> Who are you?
                             </motion.h3>
                             <motion.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-4">
                                 <motion.div variants={fadeInUp}>
@@ -137,8 +137,8 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                             exit="exit"
                             className="space-y-6"
                         >
-                            <motion.h3 variants={fadeInUp} initial="hidden" animate="show" className="text-xl font-semibold mb-6 flex items-center">
-                                <Instagram className="w-5 h-5 mr-2 text-blue-300" /> Social Presence
+                            <motion.h3 variants={fadeInUp} initial="hidden" animate="show" className="text-xl font-semibold mb-6 flex items-center text-gray-900">
+                                <Instagram className="w-5 h-5 mr-2 text-[#2008b9]" /> Social Presence
                             </motion.h3>
                             <motion.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-4">
                                 <motion.div variants={fadeInUp}>
@@ -147,16 +147,16 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
 
                                 <motion.div variants={fadeInUp} className="flex flex-col space-y-2">
                                     <div className="flex items-center">
-                                        <label className="text-sm font-medium text-white/80">Primary Niche</label>
+                                        <label className="text-sm font-medium text-gray-700">Primary Niche</label>
                                         <InfoTooltip text="Select the category that best describes your content style." />
                                     </div>
                                     <select
                                         name="niche"
                                         value={data.niche}
                                         onChange={handleChange}
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/50 focus:bg-white/10 transition-colors"
+                                        className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:border-[#2008b9] focus:ring-1 focus:ring-[#2008b9] transition-colors"
                                     >
-                                        <option value="" className="text-black">Any Niche</option>
+                                        <option value="" className="text-gray-500">Any Niche</option>
                                         <option value="Fashion" className="text-black">Fashion</option>
                                         <option value="Beauty" className="text-black">Beauty</option>
                                         <option value="Tech" className="text-black">Tech</option>
@@ -180,23 +180,23 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                             exit="exit"
                             className="space-y-6"
                         >
-                            <motion.h3 variants={fadeInUp} initial="hidden" animate="show" className="text-xl font-semibold mb-6 flex items-center">
-                                <MapPin className="w-5 h-5 mr-2 text-blue-300" /> The Details
+                            <motion.h3 variants={fadeInUp} initial="hidden" animate="show" className="text-xl font-semibold mb-6 flex items-center text-gray-900">
+                                <MapPin className="w-5 h-5 mr-2 text-[#2008b9]" /> The Details
                             </motion.h3>
                             <motion.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <motion.div variants={fadeInUp} className="flex flex-col space-y-2">
                                         <div className="flex items-center">
-                                            <label className="text-sm font-medium text-white/80">Age Group</label>
+                                            <label className="text-sm font-medium text-gray-700">Age Group</label>
                                             <InfoTooltip text="Helps us match you with campaigns targeting specific demographics." />
                                         </div>
                                         <select
                                             name="age"
                                             value={data.age}
                                             onChange={handleChange}
-                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/50 focus:bg-white/10 transition-colors"
+                                            className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:border-[#2008b9] focus:ring-1 focus:ring-[#2008b9] transition-colors"
                                         >
-                                            <option value="" className="text-black">Select...</option>
+                                            <option value="" className="text-gray-500">Select...</option>
                                             <option value="18-24" className="text-black">18-24</option>
                                             <option value="25-34" className="text-black">25-34</option>
                                             <option value="35-44" className="text-black">35-44</option>
@@ -218,7 +218,7 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
 
                                 <motion.div variants={fadeInUp} className="flex flex-col space-y-3">
                                     <div className="flex items-center">
-                                        <label className="text-sm font-medium text-white/80">Preferred Campaign Types</label>
+                                        <label className="text-sm font-medium text-gray-700">Preferred Campaign Types</label>
                                         <InfoTooltip text="Select the types of collaborations you are most interested in." />
                                     </div>
                                     <CampaignTypeSelector
@@ -240,19 +240,19 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                             exit="exit"
                             className="space-y-6"
                         >
-                            <motion.h3 variants={fadeInUp} initial="hidden" animate="show" className="text-xl font-semibold mb-6 flex items-center">
-                                <CheckCircle className="w-5 h-5 mr-2 text-blue-300" /> Final Step
+                            <motion.h3 variants={fadeInUp} initial="hidden" animate="show" className="text-xl font-semibold mb-6 flex items-center text-gray-900">
+                                <CheckCircle className="w-5 h-5 mr-2 text-[#2008b9]" /> Final Step
                             </motion.h3>
-                            <motion.div variants={staggerContainer} initial="hidden" animate="show" className="bg-white/5 p-6 rounded-xl border border-white/10 space-y-4">
+                            <motion.div variants={staggerContainer} initial="hidden" animate="show" className="bg-gray-50 p-6 rounded-xl border border-gray-200 space-y-4">
                                 <motion.label variants={fadeInUp} className="flex items-start space-x-3 cursor-pointer group">
                                     <input
                                         type="checkbox"
                                         name="agreedToTerms"
                                         checked={data.agreedToTerms || false}
                                         onChange={(e) => setData({ ...data, agreedToTerms: e.target.checked })}
-                                        className="mt-1 w-5 h-5 rounded border-white/30 bg-white/10 checked:bg-blue-600 checked:border-transparent transition-all"
+                                        className="mt-1 w-5 h-5 rounded border-gray-300 text-[#2008b9] focus:ring-[#2008b9] transition-all"
                                     />
-                                    <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">
+                                    <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
                                         I agree to the Terms of Service and Privacy Policy. I understand that Jetfluenz is currently in beta.
                                     </span>
                                 </motion.label>
@@ -262,9 +262,9 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                                         name="agreedToAuthorized"
                                         checked={data.agreedToAuthorized || false}
                                         onChange={(e) => setData({ ...data, agreedToAuthorized: e.target.checked })}
-                                        className="mt-1 w-5 h-5 rounded border-white/30 bg-white/10 checked:bg-blue-600 checked:border-transparent transition-all"
+                                        className="mt-1 w-5 h-5 rounded border-gray-300 text-[#2008b9] focus:ring-[#2008b9] transition-all"
                                     />
-                                    <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">
+                                    <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
                                         I confirm that the provided information is accurate and I am authorized to represent this account.
                                     </span>
                                 </motion.label>
@@ -281,11 +281,11 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
             </div>
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between pt-8 border-t border-white/10 mt-4">
+            <div className="flex justify-between pt-8 border-t border-gray-100 mt-4">
                 <button
                     onClick={handleBack}
                     disabled={currentStep === 0}
-                    className={`flex items-center px-6 py-2 rounded-lg transition-colors ${currentStep === 0 ? 'text-white/20 cursor-not-allowed' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
+                    className={`flex items-center px-6 py-2 rounded-lg transition-colors ${currentStep === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}
                 >
                     <ArrowLeft className="w-4 h-4 mr-2" /> Back
                 </button>
@@ -294,7 +294,7 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                     whileTap={{ scale: 0.98 }}
                     onClick={handleNext}
                     disabled={isSubmitting}
-                    className="flex items-center px-8 py-3 bg-white text-[#2008b9] font-bold rounded-lg hover:bg-white/90 active:scale-95 transition-all shadow-lg shadow-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center px-8 py-3 bg-[#2008b9] text-white font-bold rounded-lg hover:bg-[#2008b9]/90 active:scale-95 transition-all shadow-lg shadow-[#2008b9]/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {isSubmitting ? 'Processing...' : (
                         currentStep === STEPS.length - 1 ? 'Submit Application' : 'Next Step'
@@ -309,11 +309,11 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
 const Input = ({ label, tooltip, ...props }) => (
     <div className="flex flex-col space-y-2">
         <div className="flex items-center">
-            <label className="text-sm font-medium text-white/80">{label}</label>
+            <label className="text-sm font-medium text-gray-700">{label}</label>
             {tooltip && <InfoTooltip text={tooltip} />}
         </div>
         <input
-            className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/60 focus:bg-white/20 transition-all shadow-inner"
+            className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#2008b9] focus:ring-1 focus:ring-[#2008b9] transition-all shadow-sm"
             {...props}
         />
     </div>
