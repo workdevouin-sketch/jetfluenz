@@ -6,9 +6,9 @@ import { Camera, Building2, ArrowRight } from 'lucide-react';
 export default function StepRoleSelection({ onSelect }) {
     return (
         <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut" } }}
+            exit={{ opacity: 0, x: -50, transition: { duration: 0.3, ease: "easeIn" } }}
             className="flex flex-col h-full justify-center"
         >
             <div className="text-center mb-8 md:mb-12">

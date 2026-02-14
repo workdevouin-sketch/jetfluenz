@@ -14,6 +14,12 @@ const STEPS = [
     { id: 'legal', title: 'Legal' }
 ];
 
+const stepVariants = {
+    initial: { opacity: 0, x: 50 },
+    animate: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut" } },
+    exit: { opacity: 0, x: -50, transition: { duration: 0.3, ease: "easeIn" } }
+};
+
 export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) {
     const [currentStep, setCurrentStep] = useState(0);
     const [data, setData] = useState(initialData || {});
@@ -97,9 +103,10 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                     {currentStepId === 'identity' && (
                         <motion.div
                             key="identity"
-                            initial={{ opacity: 0, x: 10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -10 }}
+                            variants={stepVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
                             className="space-y-6"
                         >
                             <h3 className="text-xl font-semibold mb-6 flex items-center">
@@ -116,9 +123,10 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                     {currentStepId === 'social' && (
                         <motion.div
                             key="social"
-                            initial={{ opacity: 0, x: 10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -10 }}
+                            variants={stepVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
                             className="space-y-6"
                         >
                             <h3 className="text-xl font-semibold mb-6 flex items-center">
@@ -155,9 +163,10 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                     {currentStepId === 'details' && (
                         <motion.div
                             key="details"
-                            initial={{ opacity: 0, x: 10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -10 }}
+                            variants={stepVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
                             className="space-y-6"
                         >
                             <h3 className="text-xl font-semibold mb-6 flex items-center">
@@ -209,9 +218,10 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                     {currentStepId === 'legal' && (
                         <motion.div
                             key="legal"
-                            initial={{ opacity: 0, x: 10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -10 }}
+                            variants={stepVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
                             className="space-y-6"
                         >
                             <h3 className="text-xl font-semibold mb-6 flex items-center">
