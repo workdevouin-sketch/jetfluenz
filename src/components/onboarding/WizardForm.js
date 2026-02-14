@@ -113,13 +113,13 @@ export default function WizardForm({ isOpen, onClose }) {
                         className="relative w-full max-w-4xl bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {/* Header / Close Button */}
-                        <div className="absolute top-4 right-4 z-10">
+                        {/* Header / Close Button - Fixed to prevent overlap */}
+                        <div className="absolute top-5 right-5 z-50">
                             <button
                                 onClick={onClose}
-                                className="p-2 rounded-full hover:bg-gray-100 transition-colors group"
+                                className="p-2 rounded-full bg-gray-100/50 hover:bg-gray-100 transition-colors group backdrop-blur-sm"
                             >
-                                <X className="w-6 h-6 text-gray-400 group-hover:text-gray-900 transition-colors" />
+                                <X className="w-5 h-5 text-gray-500 group-hover:text-gray-900 transition-colors" />
                             </button>
                         </div>
 
@@ -132,11 +132,30 @@ export default function WizardForm({ isOpen, onClose }) {
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
-                                        className="absolute inset-0 flex items-center justify-center bg-white z-20"
+                                        className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm z-40"
                                     >
-                                        <div className="flex flex-col items-center gap-4">
-                                            <div className="w-12 h-12 border-4 border-[#2008b9]/20 border-t-[#2008b9] rounded-full animate-spin" />
-                                            <p className="text-[#2008b9] font-medium animate-pulse">Loading...</p>
+                                        <div className="bg-white/80 p-6 rounded-2xl shadow-sm border border-gray-100 backdrop-blur-xl">
+                                            {/* Apple-style Activity Indicator */}
+                                            <div className="relative w-12 h-12">
+                                                {[...Array(12)].map((_, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className="absolute top-0 left-1/2 w-[10%] h-[28%] bg-[#2008b9] rounded-full origin-bottom"
+                                                        style={{
+                                                            transform: `translateX(-50%) rotate(${i * 30}deg) translateY(100%) translateY(-150%)`, // Position ticks in a circle
+                                                            opacity: 0.2 + (i / 12) * 0.8, // Static gradient for visual, animation handles the spin
+                                                            animation: `spin-fade 1.2s linear infinite`,
+                                                            animationDelay: `-${1.2 - (i * 0.1)}s`
+                                                        }}
+                                                    />
+                                                ))}
+                                            </div>
+                                            <style jsx>{`
+                                                @keyframes spin-fade {
+                                                    0% { opacity: 1; }
+                                                    100% { opacity: 0.15; }
+                                                }
+                                            `}</style>
                                         </div>
                                     </motion.div>
                                 ) : (

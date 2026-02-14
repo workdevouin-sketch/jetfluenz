@@ -74,7 +74,7 @@ export default function StepBusiness({ onSubmit, isSubmitting, initialData }) {
             className="flex flex-col h-full"
         >
             {/* Header & Progress */}
-            <div className="mb-8">
+            <div className="mb-8 pr-12">
                 <div className="flex items-center justify-between mb-2">
                     <h2 className="text-2xl font-bold text-gray-900">Business Registration</h2>
                     <span className="text-sm text-gray-500">Step {currentStep + 1} of {STEPS.length}</span>
