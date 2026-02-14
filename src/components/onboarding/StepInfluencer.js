@@ -17,7 +17,7 @@ const STEPS = [
 
 
 
-export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) {
+export default function StepInfluencer({ onSubmit, isSubmitting, initialData, onBack }) {
     const [currentStep, setCurrentStep] = useState(0);
     const [data, setData] = useState(initialData || {});
     const [direction, setDirection] = useState(0);
@@ -61,6 +61,8 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
         if (currentStep > 0) {
             setDirection(-1);
             setCurrentStep(prev => prev - 1);
+        } else if (onBack) {
+            onBack();
         }
     };
 
@@ -284,8 +286,8 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
             <div className="flex justify-between pt-8 border-t border-gray-100 mt-4">
                 <button
                     onClick={handleBack}
-                    disabled={currentStep === 0}
-                    className={`flex items-center px-6 py-2 rounded-lg transition-colors ${currentStep === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}
+                    disabled={currentStep === 0 && !onBack}
+                    className={`flex items-center px-6 py-2 rounded-lg transition-colors ${(currentStep === 0 && !onBack) ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}
                 >
                     <ArrowLeft className="w-4 h-4 mr-2" /> Back
                 </button>

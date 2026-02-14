@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { containerVariants, backdropVariants } from './animationData';
+import { containerVariants, backdropVariants, pageVariants } from './animationData';
 import { X, AlertCircle } from 'lucide-react';
 import StepRoleSelection from './StepRoleSelection';
 import StepInfluencer from './StepInfluencer';
@@ -15,7 +15,7 @@ export default function WizardForm({ isOpen, onClose }) {
     const [role, setRole] = useState(null);
     const [formData, setFormData] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isLoading, setIsLoading] = useState(false); // New loading state
+    const [direction, setDirection] = useState(0); // -1 for back, 1 for next
     const [error, setError] = useState('');
     const [showError, setShowError] = useState(false);
 
@@ -26,13 +26,15 @@ export default function WizardForm({ isOpen, onClose }) {
     };
 
     const handleRoleSelect = (selectedRole) => {
-        setIsLoading(true);
+        setDirection(1);
         setRole(selectedRole);
-        // Simulate loading delay to prevent flicker/layout shift
-        setTimeout(() => {
-            setStep(selectedRole);
-            setIsLoading(false);
-        }, 600);
+        setStep(selectedRole);
+    };
+
+    const handleBackToRole = () => {
+        setDirection(-1);
+        setStep('role');
+        setRole(null);
     };
 
     const handleDataUpdate = (data) => {
@@ -50,6 +52,7 @@ export default function WizardForm({ isOpen, onClose }) {
         try {
             const result = await handleSignupFlow(completeData);
             if (result.success) {
+                setDirection(1);
                 setStep('success');
             } else {
                 triggerError(result.error || 'Account with this email already exists.');
@@ -124,68 +127,72 @@ export default function WizardForm({ isOpen, onClose }) {
                         </div>
 
                         {/* Content Area */}
-                        <div className="flex-1 flex flex-col p-6 sm:p-8 md:p-12 text-gray-900 overflow-y-auto custom-scrollbar relative">
-                            <AnimatePresence mode="wait">
-                                {isLoading ? (
+                        <div className="flex-1 flex flex-col p-6 sm:p-8 md:p-12 text-gray-900 overflow-y-auto custom-scrollbar relative overflow-x-hidden">
+                            <AnimatePresence mode="wait" custom={direction}>
+                                {step === 'role' && (
                                     <motion.div
-                                        key="loader"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm z-40"
+                                        key="role"
+                                        custom={direction}
+                                        variants={pageVariants}
+                                        initial="enter"
+                                        animate="center"
+                                        exit="exit"
+                                        className="w-full h-full"
                                     >
-                                        <div className="bg-white/80 p-6 rounded-2xl shadow-sm border border-gray-100 backdrop-blur-xl">
-                                            {/* Apple-style Activity Indicator */}
-                                            <div className="relative w-12 h-12">
-                                                {[...Array(12)].map((_, i) => (
-                                                    <div
-                                                        key={i}
-                                                        className="absolute top-0 left-1/2 w-[10%] h-[28%] bg-[#2008b9] rounded-full origin-bottom"
-                                                        style={{
-                                                            transform: `translateX(-50%) rotate(${i * 30}deg) translateY(100%) translateY(-150%)`, // Position ticks in a circle
-                                                            opacity: 0.2 + (i / 12) * 0.8, // Static gradient for visual, animation handles the spin
-                                                            animation: `spin-fade 1.2s linear infinite`,
-                                                            animationDelay: `-${1.2 - (i * 0.1)}s`
-                                                        }}
-                                                    />
-                                                ))}
-                                            </div>
-                                            <style jsx>{`
-                                                @keyframes spin-fade {
-                                                    0% { opacity: 1; }
-                                                    100% { opacity: 0.15; }
-                                                }
-                                            `}</style>
-                                        </div>
+                                        <StepRoleSelection onSelect={handleRoleSelect} />
                                     </motion.div>
-                                ) : (
-                                    <>
-                                        {step === 'role' && (
-                                            <StepRoleSelection key="role" onSelect={handleRoleSelect} />
-                                        )}
+                                )}
 
-                                        {step === 'influencer' && (
-                                            <StepInfluencer
-                                                key="influencer"
-                                                onSubmit={handleSubmit}
-                                                isSubmitting={isSubmitting}
-                                                initialData={formData}
-                                            />
-                                        )}
+                                {step === 'influencer' && (
+                                    <motion.div
+                                        key="influencer"
+                                        custom={direction}
+                                        variants={pageVariants}
+                                        initial="enter"
+                                        animate="center"
+                                        exit="exit"
+                                        className="w-full h-full"
+                                    >
+                                        <StepInfluencer
+                                            onSubmit={handleSubmit}
+                                            isSubmitting={isSubmitting}
+                                            initialData={formData}
+                                            onBack={handleBackToRole}
+                                        />
+                                    </motion.div>
+                                )}
 
-                                        {step === 'business' && (
-                                            <StepBusiness
-                                                key="business"
-                                                onSubmit={handleSubmit}
-                                                isSubmitting={isSubmitting}
-                                                initialData={formData}
-                                            />
-                                        )}
+                                {step === 'business' && (
+                                    <motion.div
+                                        key="business"
+                                        custom={direction}
+                                        variants={pageVariants}
+                                        initial="enter"
+                                        animate="center"
+                                        exit="exit"
+                                        className="w-full h-full"
+                                    >
+                                        <StepBusiness
+                                            onSubmit={handleSubmit}
+                                            isSubmitting={isSubmitting}
+                                            initialData={formData}
+                                            onBack={handleBackToRole}
+                                        />
+                                    </motion.div>
+                                )}
 
-                                        {step === 'success' && (
-                                            <SuccessScreen key="success" onClose={onClose} />
-                                        )}
-                                    </>
+                                {step === 'success' && (
+                                    <motion.div
+                                        key="success"
+                                        custom={direction}
+                                        variants={pageVariants}
+                                        initial="enter"
+                                        animate="center"
+                                        exit="exit"
+                                        className="w-full h-full"
+                                    >
+                                        <SuccessScreen onClose={onClose} />
+                                    </motion.div>
                                 )}
                             </AnimatePresence>
                         </div>
