@@ -16,8 +16,8 @@ const STEPS = [
 
 const stepVariants = {
     initial: { opacity: 0, x: 50 },
-    animate: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut" } },
-    exit: { opacity: 0, x: -50, transition: { duration: 0.3, ease: "easeIn" } }
+    animate: { opacity: 1, x: 0, transition: { duration: 0.8, ease: "easeInOut" } },
+    exit: { opacity: 0, x: -50, transition: { duration: 0.6, ease: "easeInOut" } }
 };
 
 export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) {
