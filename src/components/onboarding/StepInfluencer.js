@@ -306,13 +306,15 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
     );
 }
 
-<div className="flex flex-col space-y-2">
-    <div className="flex items-center">
-        <label className="text-sm font-medium text-white/80">{label}</label>
-        {tooltip && <InfoTooltip text={tooltip} />}
+const Input = ({ label, tooltip, ...props }) => (
+    <div className="flex flex-col space-y-2">
+        <div className="flex items-center">
+            <label className="text-sm font-medium text-white/80">{label}</label>
+            {tooltip && <InfoTooltip text={tooltip} />}
+        </div>
+        <input
+            className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/60 focus:bg-white/20 transition-all shadow-inner"
+            {...props}
+        />
     </div>
-    <input
-        className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/60 focus:bg-white/20 transition-all shadow-inner"
-        {...props}
-    />
-</div>
+);
