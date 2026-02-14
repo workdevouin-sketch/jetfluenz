@@ -115,7 +115,7 @@ export default function WizardForm({ isOpen, onClose }) {
 
                         {/* Content Area */}
                         <div className="flex-1 flex flex-col p-6 sm:p-8 md:p-12 text-white overflow-y-auto custom-scrollbar">
-                            <AnimatePresence mode="wait">
+                            <AnimatePresence mode="popLayout">
                                 {step === 'role' && (
                                     <StepRoleSelection key="role" onSelect={handleRoleSelect} />
                                 )}
