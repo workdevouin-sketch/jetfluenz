@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { containerVariants, backdropVariants } from './animationData';
 import { X, AlertCircle } from 'lucide-react';
 import StepRoleSelection from './StepRoleSelection';
 import StepInfluencer from './StepInfluencer';
@@ -61,11 +62,12 @@ export default function WizardForm({ isOpen, onClose }) {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     {/* Dynamic Background Backdrop */}
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                        variants={backdropVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
                         onClick={onClose}
-                        className="absolute inset-0 bg-[#2008b9]/90 backdrop-blur-sm"
+                        className="absolute inset-0 bg-[#2008b9]/80 backdrop-blur-md"
                     />
 
                     {/* Toast Notification */}
@@ -98,10 +100,11 @@ export default function WizardForm({ isOpen, onClose }) {
 
                     {/* Main Card Container */}
                     <motion.div
-                        initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                        animate={{ scale: 1, opacity: 1, y: 0 }}
-                        exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                        className="relative w-full max-w-4xl bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        className="relative w-full max-w-4xl bg-[#0a0a0a]/90 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header / Close Button */}
@@ -110,13 +113,13 @@ export default function WizardForm({ isOpen, onClose }) {
                                 onClick={onClose}
                                 className="p-2 rounded-full hover:bg-white/10 transition-colors group"
                             >
-                                <X className="w-6 h-6 text-white/70 group-hover:text-white" />
+                                <X className="w-6 h-6 text-white/50 group-hover:text-white transition-colors" />
                             </button>
                         </div>
 
                         {/* Content Area */}
                         <div className="flex-1 flex flex-col p-6 sm:p-8 md:p-12 text-white overflow-y-auto custom-scrollbar">
-                            <AnimatePresence mode="popLayout">
+                            <AnimatePresence mode="wait" initial={false}>
                                 {step === 'role' && (
                                     <StepRoleSelection key="role" onSelect={handleRoleSelect} />
                                 )}

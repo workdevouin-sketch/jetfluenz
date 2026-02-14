@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { pageVariants, staggerContainer, fadeInUp } from './animationData';
 import { ArrowLeft, ArrowRight, Building2, Globe, CheckCircle } from 'lucide-react';
 
 const STEPS = [
@@ -10,16 +11,12 @@ const STEPS = [
     { id: 'legal', title: 'Legal' }
 ];
 
-const stepVariants = {
-    initial: { opacity: 0, x: 50 },
-    animate: { opacity: 1, x: 0, transition: { duration: 0.8, ease: "easeInOut" } },
-    exit: { opacity: 0, x: -50, transition: { duration: 0.6, ease: "easeInOut" } }
-};
+
 
 export default function StepBusiness({ onSubmit, isSubmitting, initialData }) {
     const [currentStep, setCurrentStep] = useState(0);
     const [data, setData] = useState(initialData || {});
-
+    const [direction, setDirection] = useState(0);
     const [validationError, setValidationError] = useState('');
 
     const validateStep = (stepId) => {
@@ -49,6 +46,7 @@ export default function StepBusiness({ onSubmit, isSubmitting, initialData }) {
         if (!validateStep(STEPS[currentStep].id)) return;
 
         if (currentStep < STEPS.length - 1) {
+            setDirection(1);
             setCurrentStep(prev => prev + 1);
         } else {
             onSubmit(data);
@@ -57,6 +55,7 @@ export default function StepBusiness({ onSubmit, isSubmitting, initialData }) {
 
     const handleBack = () => {
         if (currentStep > 0) {
+            setDirection(-1);
             setCurrentStep(prev => prev - 1);
         }
     };
@@ -85,70 +84,88 @@ export default function StepBusiness({ onSubmit, isSubmitting, initialData }) {
                         className="h-full bg-gradient-to-r from-blue-400 to-indigo-400"
                         initial={{ width: 0 }}
                         animate={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
+                        transition={{ duration: 0.3 }}
                     />
                 </div>
             </div>
 
             {/* Form Content */}
-            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                <AnimatePresence mode="popLayout">
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar overflow-x-hidden">
+                <AnimatePresence mode="popLayout" custom={direction} initial={false}>
                     {currentStepId === 'identity' && (
                         <motion.div
                             key="identity"
-                            variants={stepVariants}
-                            initial="initial"
-                            animate="animate"
+                            custom={direction}
+                            variants={pageVariants}
+                            initial="enter"
+                            animate="center"
                             exit="exit"
                             className="space-y-6"
                         >
-                            <h3 className="text-xl font-semibold mb-6 flex items-center">
+                            <motion.h3 variants={fadeInUp} initial="hidden" animate="show" className="text-xl font-semibold mb-6 flex items-center">
                                 <Building2 className="w-5 h-5 mr-2 text-blue-300" /> Company Identity
-                            </h3>
-                            <div className="space-y-4">
-                                <Input label="Company Name" name="companyName" value={data.companyName} onChange={handleChange} placeholder="Acme Corp" />
-                                <Input label="Contact Person" name="contactPerson" value={data.contactPerson} onChange={handleChange} placeholder="John Manager" />
+                            </motion.h3>
+                            <motion.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-4">
+                                <motion.div variants={fadeInUp}>
+                                    <Input label="Company Name" name="companyName" value={data.companyName} onChange={handleChange} placeholder="Acme Corp" />
+                                </motion.div>
+                                <motion.div variants={fadeInUp}>
+                                    <Input label="Contact Person" name="contactPerson" value={data.contactPerson} onChange={handleChange} placeholder="John Manager" />
+                                </motion.div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <Input label="Business Email" type="email" name="email" value={data.email} onChange={handleChange} placeholder="contact@acme.com" />
-                                    <Input label="Phone" type="tel" name="phone" value={data.phone} onChange={handleChange} placeholder="+1 (555) 000-0000" />
+                                    <motion.div variants={fadeInUp}>
+                                        <Input label="Business Email" type="email" name="email" value={data.email} onChange={handleChange} placeholder="contact@acme.com" />
+                                    </motion.div>
+                                    <motion.div variants={fadeInUp}>
+                                        <Input label="Phone" type="tel" name="phone" value={data.phone} onChange={handleChange} placeholder="+1 (555) 000-0000" />
+                                    </motion.div>
                                 </div>
-                            </div>
+                            </motion.div>
                         </motion.div>
                     )}
 
                     {currentStepId === 'profile' && (
                         <motion.div
                             key="profile"
-                            variants={stepVariants}
-                            initial="initial"
-                            animate="animate"
+                            custom={direction}
+                            variants={pageVariants}
+                            initial="enter"
+                            animate="center"
                             exit="exit"
                             className="space-y-6"
                         >
-                            <h3 className="text-xl font-semibold mb-6 flex items-center">
+                            <motion.h3 variants={fadeInUp} initial="hidden" animate="show" className="text-xl font-semibold mb-6 flex items-center">
                                 <Globe className="w-5 h-5 mr-2 text-blue-300" /> Brand Profile
-                            </h3>
-                            <div className="space-y-4">
-                                <Input label="Website URL" name="website" value={data.website} onChange={handleChange} placeholder="https://acme.com" />
-                                <Input label="Industry / Category" name="industry" value={data.industry} onChange={handleChange} placeholder="e.g., E-commerce, SaaS, Fashion" />
-                                <Input label="LinkedIn / Social URL" name="social" value={data.social} onChange={handleChange} placeholder="https://linkedin.com/company/acme" />
-                            </div>
+                            </motion.h3>
+                            <motion.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-4">
+                                <motion.div variants={fadeInUp}>
+                                    <Input label="Website URL" name="website" value={data.website} onChange={handleChange} placeholder="https://acme.com" />
+                                </motion.div>
+                                <motion.div variants={fadeInUp}>
+                                    <Input label="Industry / Category" name="industry" value={data.industry} onChange={handleChange} placeholder="e.g., E-commerce, SaaS, Fashion" />
+                                </motion.div>
+                                <motion.div variants={fadeInUp}>
+                                    <Input label="LinkedIn / Social URL" name="social" value={data.social} onChange={handleChange} placeholder="https://linkedin.com/company/acme" />
+                                </motion.div>
+                            </motion.div>
                         </motion.div>
                     )}
 
                     {currentStepId === 'legal' && (
                         <motion.div
                             key="legal"
-                            variants={stepVariants}
-                            initial="initial"
-                            animate="animate"
+                            custom={direction}
+                            variants={pageVariants}
+                            initial="enter"
+                            animate="center"
                             exit="exit"
                             className="space-y-6"
                         >
-                            <h3 className="text-xl font-semibold mb-6 flex items-center">
+                            <motion.h3 variants={fadeInUp} initial="hidden" animate="show" className="text-xl font-semibold mb-6 flex items-center">
                                 <CheckCircle className="w-5 h-5 mr-2 text-blue-300" /> Final Step
-                            </h3>
-                            <div className="bg-white/5 p-6 rounded-xl border border-white/10 space-y-4">
-                                <label className="flex items-start space-x-3 cursor-pointer group">
+                            </motion.h3>
+                            <motion.div variants={staggerContainer} initial="hidden" animate="show" className="bg-white/5 p-6 rounded-xl border border-white/10 space-y-4">
+                                <motion.label variants={fadeInUp} className="flex items-start space-x-3 cursor-pointer group">
                                     <input
                                         type="checkbox"
                                         name="agreedToTerms"
@@ -159,8 +176,8 @@ export default function StepBusiness({ onSubmit, isSubmitting, initialData }) {
                                     <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">
                                         I agree to the Terms of Service and Privacy Policy.
                                     </span>
-                                </label>
-                                <label className="flex items-start space-x-3 cursor-pointer group">
+                                </motion.label>
+                                <motion.label variants={fadeInUp} className="flex items-start space-x-3 cursor-pointer group">
                                     <input
                                         type="checkbox"
                                         name="agreedToAuthorized"
@@ -171,11 +188,11 @@ export default function StepBusiness({ onSubmit, isSubmitting, initialData }) {
                                     <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">
                                         I confirm that I am authorized to represent this business.
                                     </span>
-                                </label>
+                                </motion.label>
                                 {validationError && (
                                     <div className="text-red-400 text-sm animate-pulse">{validationError}</div>
                                 )}
-                            </div>
+                            </motion.div>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -190,7 +207,9 @@ export default function StepBusiness({ onSubmit, isSubmitting, initialData }) {
                 >
                     <ArrowLeft className="w-4 h-4 mr-2" /> Back
                 </button>
-                <button
+                <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={handleNext}
                     disabled={isSubmitting}
                     className="flex items-center px-8 py-3 bg-white text-[#2008b9] font-bold rounded-lg hover:bg-white/90 active:scale-95 transition-all shadow-lg shadow-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -199,7 +218,7 @@ export default function StepBusiness({ onSubmit, isSubmitting, initialData }) {
                         currentStep === STEPS.length - 1 ? 'Submit Support' : 'Next Step'
                     )}
                     {!isSubmitting && currentStep !== STEPS.length - 1 && <ArrowRight className="w-4 h-4 ml-2" />}
-                </button>
+                </motion.button>
             </div>
         </motion.div>
     );

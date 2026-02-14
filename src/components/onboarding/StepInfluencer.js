@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { pageVariants, staggerContainer, fadeInUp } from './animationData';
 import { ArrowLeft, ArrowRight, Instagram, Users, MapPin, CheckCircle } from 'lucide-react';
 import LocationAutocomplete from './LocationAutocomplete';
 import InfoTooltip from '../ui/InfoTooltip';
@@ -14,16 +15,12 @@ const STEPS = [
     { id: 'legal', title: 'Legal' }
 ];
 
-const stepVariants = {
-    initial: { opacity: 0, x: 50 },
-    animate: { opacity: 1, x: 0, transition: { duration: 0.8, ease: "easeInOut" } },
-    exit: { opacity: 0, x: -50, transition: { duration: 0.6, ease: "easeInOut" } }
-};
+
 
 export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) {
     const [currentStep, setCurrentStep] = useState(0);
     const [data, setData] = useState(initialData || {});
-
+    const [direction, setDirection] = useState(0);
     const [validationError, setValidationError] = useState('');
 
     const validateStep = (stepId) => {
@@ -53,6 +50,7 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
         if (!validateStep(STEPS[currentStep].id)) return;
 
         if (currentStep < STEPS.length - 1) {
+            setDirection(1);
             setCurrentStep(prev => prev + 1);
         } else {
             onSubmit(data);
@@ -61,6 +59,7 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
 
     const handleBack = () => {
         if (currentStep > 0) {
+            setDirection(-1);
             setCurrentStep(prev => prev - 1);
         }
     };
@@ -93,49 +92,60 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                         className="h-full bg-gradient-to-r from-blue-400 to-indigo-400"
                         initial={{ width: 0 }}
                         animate={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
+                        transition={{ duration: 0.3 }}
                     />
                 </div>
             </div>
 
             {/* Form Content */}
-            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                <AnimatePresence mode="popLayout">
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar overflow-x-hidden">
+                <AnimatePresence mode="popLayout" custom={direction} initial={false}>
                     {currentStepId === 'identity' && (
                         <motion.div
                             key="identity"
-                            variants={stepVariants}
-                            initial="initial"
-                            animate="animate"
+                            custom={direction}
+                            variants={pageVariants}
+                            initial="enter"
+                            animate="center"
                             exit="exit"
                             className="space-y-6"
                         >
-                            <h3 className="text-xl font-semibold mb-6 flex items-center">
+                            <motion.h3 variants={fadeInUp} initial="hidden" animate="show" className="text-xl font-semibold mb-6 flex items-center">
                                 <Users className="w-5 h-5 mr-2 text-blue-300" /> Who are you?
-                            </h3>
-                            <div className="space-y-4">
-                                <Input label="Full Name" name="name" value={data.name} onChange={handleChange} placeholder="Jane Doe" tooltip="Enter your legal name or the name you use for business." />
-                                <Input label="Email Address" type="email" name="email" value={data.email} onChange={handleChange} placeholder="jane@example.com" tooltip="We'll send campaign invites and notifications here." />
-                                <Input label="Phone Number" type="tel" name="phone" value={data.phone} onChange={handleChange} placeholder="+1 (555) 000-0000" tooltip="For urgent campaign updates or account verification." />
-                            </div>
+                            </motion.h3>
+                            <motion.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-4">
+                                <motion.div variants={fadeInUp}>
+                                    <Input label="Full Name" name="name" value={data.name} onChange={handleChange} placeholder="Jane Doe" tooltip="Enter your legal name or the name you use for business." />
+                                </motion.div>
+                                <motion.div variants={fadeInUp}>
+                                    <Input label="Email Address" type="email" name="email" value={data.email} onChange={handleChange} placeholder="jane@example.com" tooltip="We'll send campaign invites and notifications here." />
+                                </motion.div>
+                                <motion.div variants={fadeInUp}>
+                                    <Input label="Phone Number" type="tel" name="phone" value={data.phone} onChange={handleChange} placeholder="+1 (555) 000-0000" tooltip="For urgent campaign updates or account verification." />
+                                </motion.div>
+                            </motion.div>
                         </motion.div>
                     )}
 
                     {currentStepId === 'social' && (
                         <motion.div
                             key="social"
-                            variants={stepVariants}
-                            initial="initial"
-                            animate="animate"
+                            custom={direction}
+                            variants={pageVariants}
+                            initial="enter"
+                            animate="center"
                             exit="exit"
                             className="space-y-6"
                         >
-                            <h3 className="text-xl font-semibold mb-6 flex items-center">
+                            <motion.h3 variants={fadeInUp} initial="hidden" animate="show" className="text-xl font-semibold mb-6 flex items-center">
                                 <Instagram className="w-5 h-5 mr-2 text-blue-300" /> Social Presence
-                            </h3>
-                            <div className="space-y-4">
-                                <Input label="Instagram ID" name="instagram" value={data.instagram} onChange={handleChange} placeholder="username" tooltip="Your main Instagram handle where you post content." />
+                            </motion.h3>
+                            <motion.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-4">
+                                <motion.div variants={fadeInUp}>
+                                    <Input label="Instagram ID" name="instagram" value={data.instagram} onChange={handleChange} placeholder="username" tooltip="Your main Instagram handle where you post content." />
+                                </motion.div>
 
-                                <div className="flex flex-col space-y-2">
+                                <motion.div variants={fadeInUp} className="flex flex-col space-y-2">
                                     <div className="flex items-center">
                                         <label className="text-sm font-medium text-white/80">Primary Niche</label>
                                         <InfoTooltip text="Select the category that best describes your content style." />
@@ -155,80 +165,86 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                                         <option value="Travel" className="text-black">Travel</option>
                                         <option value="Food" className="text-black">Food</option>
                                     </select>
-                                </div>
-                            </div>
+                                </motion.div>
+                            </motion.div>
                         </motion.div>
                     )}
 
                     {currentStepId === 'details' && (
                         <motion.div
                             key="details"
-                            variants={stepVariants}
-                            initial="initial"
-                            animate="animate"
+                            custom={direction}
+                            variants={pageVariants}
+                            initial="enter"
+                            animate="center"
                             exit="exit"
                             className="space-y-6"
                         >
-                            <h3 className="text-xl font-semibold mb-6 flex items-center">
+                            <motion.h3 variants={fadeInUp} initial="hidden" animate="show" className="text-xl font-semibold mb-6 flex items-center">
                                 <MapPin className="w-5 h-5 mr-2 text-blue-300" /> The Details
-                            </h3>
-                            <div className="grid grid-cols-2 gap-4 mb-4">
-                                <div className="flex flex-col space-y-2">
-                                    <div className="flex items-center">
-                                        <label className="text-sm font-medium text-white/80">Age Group</label>
-                                        <InfoTooltip text="Helps us match you with campaigns targeting specific demographics." />
-                                    </div>
-                                    <select
-                                        name="age"
-                                        value={data.age}
-                                        onChange={handleChange}
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/50 focus:bg-white/10 transition-colors"
-                                    >
-                                        <option value="" className="text-black">Select...</option>
-                                        <option value="18-24" className="text-black">18-24</option>
-                                        <option value="25-34" className="text-black">25-34</option>
-                                        <option value="35-44" className="text-black">35-44</option>
-                                        <option value="45-54" className="text-black">45-54</option>
-                                        <option value="55-64" className="text-black">55-64</option>
-                                        <option value="65+" className="text-black">65+</option>
-                                    </select>
+                            </motion.h3>
+                            <motion.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <motion.div variants={fadeInUp} className="flex flex-col space-y-2">
+                                        <div className="flex items-center">
+                                            <label className="text-sm font-medium text-white/80">Age Group</label>
+                                            <InfoTooltip text="Helps us match you with campaigns targeting specific demographics." />
+                                        </div>
+                                        <select
+                                            name="age"
+                                            value={data.age}
+                                            onChange={handleChange}
+                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/50 focus:bg-white/10 transition-colors"
+                                        >
+                                            <option value="" className="text-black">Select...</option>
+                                            <option value="18-24" className="text-black">18-24</option>
+                                            <option value="25-34" className="text-black">25-34</option>
+                                            <option value="35-44" className="text-black">35-44</option>
+                                            <option value="45-54" className="text-black">45-54</option>
+                                            <option value="55-64" className="text-black">55-64</option>
+                                            <option value="65+" className="text-black">65+</option>
+                                        </select>
+                                    </motion.div>
+                                    <motion.div variants={fadeInUp}>
+                                        <LocationAutocomplete
+                                            label="Location"
+                                            value={data.location}
+                                            onChange={handleChange}
+                                            placeholder="City, Country"
+                                            tooltip="Enter your city to find local collaboration opportunities."
+                                        />
+                                    </motion.div>
                                 </div>
-                                <LocationAutocomplete
-                                    label="Location"
-                                    value={data.location}
-                                    onChange={handleChange}
-                                    placeholder="City, Country"
-                                    tooltip="Enter your city to find local collaboration opportunities."
-                                />
-                            </div>
 
-                            <div className="flex flex-col space-y-3">
-                                <div className="flex items-center">
-                                    <label className="text-sm font-medium text-white/80">Preferred Campaign Types</label>
-                                    <InfoTooltip text="Select the types of collaborations you are most interested in." />
-                                </div>
-                                <CampaignTypeSelector
-                                    value={data.campaignTypes}
-                                    onChange={(value) => setData({ ...data, campaignTypes: value })}
-                                />
-                            </div>
+                                <motion.div variants={fadeInUp} className="flex flex-col space-y-3">
+                                    <div className="flex items-center">
+                                        <label className="text-sm font-medium text-white/80">Preferred Campaign Types</label>
+                                        <InfoTooltip text="Select the types of collaborations you are most interested in." />
+                                    </div>
+                                    <CampaignTypeSelector
+                                        value={data.campaignTypes}
+                                        onChange={(value) => setData({ ...data, campaignTypes: value })}
+                                    />
+                                </motion.div>
+                            </motion.div>
                         </motion.div>
                     )}
 
                     {currentStepId === 'legal' && (
                         <motion.div
                             key="legal"
-                            variants={stepVariants}
-                            initial="initial"
-                            animate="animate"
+                            custom={direction}
+                            variants={pageVariants}
+                            initial="enter"
+                            animate="center"
                             exit="exit"
                             className="space-y-6"
                         >
-                            <h3 className="text-xl font-semibold mb-6 flex items-center">
+                            <motion.h3 variants={fadeInUp} initial="hidden" animate="show" className="text-xl font-semibold mb-6 flex items-center">
                                 <CheckCircle className="w-5 h-5 mr-2 text-blue-300" /> Final Step
-                            </h3>
-                            <div className="bg-white/5 p-6 rounded-xl border border-white/10 space-y-4">
-                                <label className="flex items-start space-x-3 cursor-pointer group">
+                            </motion.h3>
+                            <motion.div variants={staggerContainer} initial="hidden" animate="show" className="bg-white/5 p-6 rounded-xl border border-white/10 space-y-4">
+                                <motion.label variants={fadeInUp} className="flex items-start space-x-3 cursor-pointer group">
                                     <input
                                         type="checkbox"
                                         name="agreedToTerms"
@@ -239,8 +255,8 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                                     <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">
                                         I agree to the Terms of Service and Privacy Policy. I understand that Jetfluenz is currently in beta.
                                     </span>
-                                </label>
-                                <label className="flex items-start space-x-3 cursor-pointer group">
+                                </motion.label>
+                                <motion.label variants={fadeInUp} className="flex items-start space-x-3 cursor-pointer group">
                                     <input
                                         type="checkbox"
                                         name="agreedToAuthorized"
@@ -251,14 +267,14 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                                     <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">
                                         I confirm that the provided information is accurate and I am authorized to represent this account.
                                     </span>
-                                </label>
+                                </motion.label>
                                 {isSubmitting && validationError && (
                                     <div className="text-red-400 text-sm">{validationError}</div>
                                 )}
                                 {!isSubmitting && validationError && (
                                     <div className="text-red-400 text-sm animate-pulse">{validationError}</div>
                                 )}
-                            </div>
+                            </motion.div>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -273,7 +289,9 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                 >
                     <ArrowLeft className="w-4 h-4 mr-2" /> Back
                 </button>
-                <button
+                <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={handleNext}
                     disabled={isSubmitting}
                     className="flex items-center px-8 py-3 bg-white text-[#2008b9] font-bold rounded-lg hover:bg-white/90 active:scale-95 transition-all shadow-lg shadow-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -282,7 +300,7 @@ export default function StepInfluencer({ onSubmit, isSubmitting, initialData }) 
                         currentStep === STEPS.length - 1 ? 'Submit Application' : 'Next Step'
                     )}
                     {!isSubmitting && currentStep !== STEPS.length - 1 && <ArrowRight className="w-4 h-4 ml-2" />}
-                </button>
+                </motion.button>
             </div>
         </motion.div>
     );
