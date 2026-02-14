@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, AlertCircle } from 'lucide-react';
 import StepRoleSelection from './StepRoleSelection';
 import StepInfluencer from './StepInfluencer';
 import StepBusiness from './StepBusiness';
@@ -14,6 +14,14 @@ export default function WizardForm({ isOpen, onClose }) {
     const [role, setRole] = useState(null);
     const [formData, setFormData] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState('');
+    const [showError, setShowError] = useState(false);
+
+    const triggerError = (msg) => {
+        setError(msg);
+        setShowError(true);
+        setTimeout(() => setShowError(false), 5000);
+    };
 
     const handleRoleSelect = (selectedRole) => {
         setRole(selectedRole);
@@ -37,11 +45,11 @@ export default function WizardForm({ isOpen, onClose }) {
             if (result.success) {
                 setStep('success');
             } else {
-                alert('Error: ' + result.error);
+                triggerError(result.error || 'Account with this email already exists.');
             }
         } catch (error) {
             console.error('Error submitting form:', error);
-            alert('Something went wrong. Please try again.');
+            triggerError('Something went wrong. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
@@ -59,6 +67,34 @@ export default function WizardForm({ isOpen, onClose }) {
                         onClick={onClose}
                         className="absolute inset-0 bg-[#2008b9]/90 backdrop-blur-sm"
                     />
+
+                    {/* Toast Notification */}
+                    <AnimatePresence>
+                        {showError && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                                className="fixed top-8 left-1/2 -translate-x-1/2 z-[70] w-full max-w-sm"
+                            >
+                                <div className="bg-white border-l-4 border-red-500 rounded-xl shadow-2xl p-4 flex items-start gap-3 mx-4">
+                                    <div className="bg-red-100 p-2 rounded-lg">
+                                        <AlertCircle className="w-5 h-5 text-red-600" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h4 className="text-sm font-bold text-gray-900">Form Error</h4>
+                                        <p className="text-sm text-gray-600">{error}</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowError(false)}
+                                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     {/* Main Card Container */}
                     <motion.div

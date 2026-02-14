@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { addToWaitlist } from '../lib/waitlist';
+import { motion, AnimatePresence } from 'framer-motion';
+import { AlertCircle, X } from 'lucide-react';
 
 export default function WaitlistModal({ isOpen, onClose }) {
   const [email, setEmail] = useState('');
@@ -11,6 +13,19 @@ export default function WaitlistModal({ isOpen, onClose }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [showError, setShowError] = useState(false);
+
+  useEffect(() => {
+    if (error) {
+      setShowError(true);
+      const timer = setTimeout(() => {
+        setShowError(false);
+        // Clear error after animation finishes (roughly 500ms for exit)
+        setTimeout(() => setError(''), 500);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,6 +63,7 @@ export default function WaitlistModal({ isOpen, onClose }) {
     setInstagramUrl('');
     setPhoneNumber('');
     setError('');
+    setShowError(false);
     setIsSuccess(false);
     onClose();
   };
@@ -56,6 +72,34 @@ export default function WaitlistModal({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {showError && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-8 left-1/2 -translate-x-1/2 z-[60] w-full max-w-sm"
+          >
+            <div className="bg-white border-l-4 border-red-500 rounded-xl shadow-2xl p-4 flex items-start gap-3 mx-4">
+              <div className="bg-red-100 p-2 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <h4 className="text-sm font-bold text-gray-900">Waitlist Error</h4>
+                <p className="text-sm text-gray-600">{error}</p>
+              </div>
+              <button
+                onClick={() => setShowError(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="bg-white rounded-2xl p-6 w-full max-w-md relative">
         {/* Close Button */}
         <button

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, Briefcase, DollarSign, Users, Settings, LogOut, TrendingUp, BookOpen } from 'lucide-react';
+import { LayoutGrid, Briefcase, DollarSign, Users, Settings, LogOut, TrendingUp, BookOpen, LifeBuoy } from 'lucide-react';
 
 const Sidebar = ({ role = 'influencer' }) => {
     const pathname = usePathname();
@@ -13,11 +13,12 @@ const Sidebar = ({ role = 'influencer' }) => {
     if (role === 'admin') {
         const adminPath = '/admin';
         navItems = [
+            { name: 'Dashboard', href: `/admin/overview`, icon: LayoutGrid },
             { name: 'Influencers', href: `/admin/influencers`, icon: Users },
             { name: 'Business', href: `/admin/business`, icon: Briefcase },
             { name: 'Campaigns', href: `/admin/campaigns`, icon: Briefcase },
             { name: 'Market Intelligence', href: `/admin/analyzer`, icon: LayoutGrid },
-
+            { name: 'Support', href: `/admin/support`, icon: LifeBuoy },
         ];
     } else {
         navItems = [
@@ -27,6 +28,7 @@ const Sidebar = ({ role = 'influencer' }) => {
             { name: 'Earnings', href: `${basePath}/earnings`, icon: DollarSign },
             { name: 'Settings', href: `${basePath}/settings`, icon: Settings },
             { name: 'JLearn', href: `${basePath}/jlearn`, icon: BookOpen },
+            { name: 'Support', href: `${basePath}/support`, icon: LifeBuoy },
         ];
     }
 
