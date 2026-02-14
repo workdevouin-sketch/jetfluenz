@@ -102,6 +102,7 @@ export default function WizardForm({ isOpen, onClose }) {
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.9, opacity: 0, y: 20 }}
                         className="relative w-full max-w-4xl bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                        onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header / Close Button */}
                         <div className="absolute top-4 right-4 z-10">

@@ -243,6 +243,7 @@ export default function Home() {
                 </p>
                 <div className="animate-fade-in-up" style={{ animationDelay: '0.4s', opacity: 0 }}>
                   <button
+                    type="button"
                     onClick={() => setIsWaitlistModalOpen(true)}
                     className="bg-white text-black px-8 py-4 rounded-full font-bold text-lg hover:scale-105 hover:bg-gray-50 transition-all duration-300 shadow-xl shadow-blue-900/20 relative overflow-hidden group border-2 border-transparent hover:border-[#ff5757]/30">
                     <span className="relative z-10">Join Waitlist</span>

@@ -31,7 +31,7 @@ export default function ForWhomCard({ title, description, benefits, buttonText =
                     </li>
                 ))}
             </ul>
-            <button className={styles.button} onClick={onButtonClick}>{buttonText}</button>
+            <button type="button" className={styles.button} onClick={onButtonClick}>{buttonText}</button>
         </div>
     );
 }
