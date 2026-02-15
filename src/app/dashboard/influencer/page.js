@@ -20,39 +20,28 @@ export default function InfluencerDashboard() {
             if (!userData?.id) return;
 
             try {
-                const storedUser = JSON.parse(localStorage.getItem('jetfluenz_influencer_session'));
-                if (storedUser?.id) {
-                    // Fetch Profile
-                    const docRef = doc(db, 'users', storedUser.id);
-                    const docSnap = await getDoc(docRef);
+                // Fetch Assigned Campaigns
+                const campRes = await getInfluencerCampaigns(userData.id);
+                if (campRes.success) {
+                    setAssignedCampaigns(campRes.campaigns);
+                }
 
-                    if (docSnap.exists()) {
-                        setUserData(docSnap.data());
-                    }
-
-                    // Fetch Assigned Campaigns
-                    const campRes = await getInfluencerCampaigns(storedUser.id);
-                    if (campRes.success) {
-                        setAssignedCampaigns(campRes.campaigns);
-                    }
-
-                    // Fetch Payments (Limit 5)
-                    try {
-                        const paymentsQ = query(
-                            collection(db, 'payments'),
-                            where('influencerId', '==', storedUser.id),
-                            orderBy('createdAt', 'desc'),
-                            limit(5)
-                        );
-                        const paymentsSnap = await getDocs(paymentsQ);
-                        const paymentsList = [];
-                        paymentsSnap.forEach(doc => {
-                            paymentsList.push({ id: doc.id, ...doc.data() });
-                        });
-                        setPayments(paymentsList);
-                    } catch (err) {
-                        console.error("Error fetching payments:", err);
-                    }
+                // Fetch Payments (Limit 5)
+                try {
+                    const paymentsQ = query(
+                        collection(db, 'payments'),
+                        where('influencerId', '==', userData.id),
+                        orderBy('createdAt', 'desc'),
+                        limit(5)
+                    );
+                    const paymentsSnap = await getDocs(paymentsQ);
+                    const paymentsList = [];
+                    paymentsSnap.forEach(doc => {
+                        paymentsList.push({ id: doc.id, ...doc.data() });
+                    });
+                    setPayments(paymentsList);
+                } catch (err) {
+                    console.error("Error fetching payments:", err);
                 }
             } catch (error) {
                 console.error("Error fetching campaigns:", error);

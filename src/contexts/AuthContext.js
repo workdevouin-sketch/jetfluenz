@@ -38,6 +38,13 @@ export function AuthProvider({ children }) {
                     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
                     if (userDoc.exists()) {
                         const data = userDoc.data();
+
+                        // DEV BYPASS: Auto-approve testing account
+                        if (firebaseUser.email === 'alanjohnchacko.mec@gmail.com') {
+                            data.status = 'approved';
+                            data.role = 'influencer'; // Force influencer role for testing
+                        }
+
                         setUserData({
                             id: firebaseUser.uid,
                             email: firebaseUser.email,
@@ -78,7 +85,10 @@ export function AuthProvider({ children }) {
             const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
             if (userDoc.exists()) {
                 const data = userDoc.data();
-                if (data.role !== 'admin' && data.status !== 'approved') {
+                // Check approval (Bypass for testing account)
+                const isTester = firebaseUser.email === 'alanjohnchacko.mec@gmail.com';
+
+                if (data.role !== 'admin' && data.status !== 'approved' && !isTester) {
                     await signOut(auth); // Log them out immediately
                     return { success: false, error: 'auth/not-approved' };
                 }

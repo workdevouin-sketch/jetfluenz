@@ -4,20 +4,16 @@ import DashboardLayout from '../../../../components/dashboard/DashboardLayout';
 import { Search, Filter, Briefcase, MapPin, DollarSign, Clock, CheckCircle, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getAllCampaigns, applyToCampaign, acceptCampaign, rejectCampaign } from '../../../../lib/campaigns';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function InfluencerCampaigns() {
+    const { userData: user, loading: authLoading } = useAuth();
     const [activeTab, setActiveTab] = useState('browse');
     const [campaigns, setCampaigns] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [user, setUser] = useState(null);
     const [actionLoading, setActionLoading] = useState(null); // campaignId check for loading
 
     useEffect(() => {
-        // Load user from local storage
-        const storedUser = localStorage.getItem('jetfluenz_influencer_session');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
         fetchCampaigns();
     }, []);
 
