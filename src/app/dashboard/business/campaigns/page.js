@@ -5,8 +5,10 @@ import DashboardLayout from '../../../../components/dashboard/DashboardLayout';
 import CampaignDetailsModal from '../../../../components/dashboard/CampaignDetailsModal';
 import { Plus, Search, Filter, Trash2, Eye, Edit2, Calendar, DollarSign, Users, Target, Megaphone, Smartphone, ShoppingBag, Globe, Video, Gift, CreditCard, ChevronRight, ChevronLeft } from 'lucide-react';
 import { createCampaign, getBusinessCampaigns, updateCampaign, deleteCampaign, completeCampaign } from '../../../../lib/campaigns';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function BusinessCampaigns() {
+    const { userData } = useAuth();
     const [campaigns, setCampaigns] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -29,14 +31,17 @@ export default function BusinessCampaigns() {
     const [createLoading, setCreateLoading] = useState(false);
 
     useEffect(() => {
-        fetchCampaigns();
-    }, []);
+        if (userData?.id) {
+            fetchCampaigns();
+        } else {
+            setLoading(false);
+        }
+    }, [userData]);
 
     const fetchCampaigns = async () => {
         try {
-            const user = JSON.parse(localStorage.getItem('jetfluenz_business_session'));
-            if (user?.id) {
-                const res = await getBusinessCampaigns(user.id);
+            if (userData?.id) {
+                const res = await getBusinessCampaigns(userData.id);
                 if (res.success) {
                     setCampaigns(res.campaigns);
                 }
@@ -59,7 +64,10 @@ export default function BusinessCampaigns() {
 
         setCreateLoading(true);
         try {
-            const user = JSON.parse(localStorage.getItem('jetfluenz_business_session'));
+            if (!userData?.id) {
+                alert('Session expired or invalid. Please log in again.');
+                return;
+            }
 
             if (editingCampaign) {
                 // Update existing campaign
@@ -74,8 +82,8 @@ export default function BusinessCampaigns() {
                 // Create new campaign
                 const campaignData = {
                     ...newCampaign,
-                    businessId: user.id,
-                    businessName: user.companyName || user.name || 'Business',
+                    businessId: userData.id,
+                    businessName: userData.companyName || userData.name || 'Business',
                     status: 'pending_approval'
                 };
 
