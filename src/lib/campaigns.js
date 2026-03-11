@@ -1,5 +1,6 @@
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, serverTimestamp, orderBy, getDoc, arrayUnion, runTransaction } from 'firebase/firestore';
 import { db } from './firebase';
+import { notifyAdmin, notifyBusiness, notifyInfluencer } from '@/actions/notifications';
 
 // Create a new campaign (Business)
 export const createCampaign = async (campaignData) => {
@@ -12,6 +13,13 @@ export const createCampaign = async (campaignData) => {
             assignedTo: null
         };
         const docRef = await addDoc(collection(db, 'campaigns'), data);
+        
+        // Notify admin about the new campaign
+        notifyAdmin(
+            'New Campaign Created', 
+            `A new campaign titled "${campaignData.title}" was created by Business ID: ${campaignData.businessId}.`
+        );
+        
         return { success: true, id: docRef.id };
     } catch (error) {
         console.error('Error creating campaign:', error);
@@ -31,9 +39,30 @@ export const applyToCampaign = async (campaignId, influencerData) => {
                 name: influencerData.name || 'Influencer',
                 email: influencerData.email,
                 appliedAt: new Date().toISOString(),
-                status: 'accepted'
+                status: 'pending'
             })
         });
+
+        try {
+            const campSnap = await getDoc(campaignRef);
+            if (campSnap.exists()) {
+                const campData = campSnap.data();
+                const businessSnap = await getDoc(doc(db, 'users', campData.businessId));
+                if (businessSnap.exists()) {
+                    const businessData = businessSnap.data();
+                    notifyBusiness(
+                        businessData.email,
+                        businessData.name || 'Business Partner',
+                        campData.title || 'A Campaign',
+                        'New Applicant',
+                        `<strong>${influencerData.name || 'An Influencer'}</strong> has applied for your campaign. Please review their profile in your dashboard.`
+                    );
+                }
+            }
+        } catch (e) {
+            console.error('Notification failed:', e);
+        }
+
         return { success: true };
     } catch (error) {
         console.error('Error applying to campaign:', error);
@@ -86,6 +115,27 @@ export const assignCampaign = async (campaignId, influencerId, influencerName) =
             status: 'offered',
             assignedAt: serverTimestamp()
         });
+
+        try {
+            const campSnap = await getDoc(campaignRef);
+            if (campSnap.exists()) {
+                const campData = campSnap.data();
+                const influencerSnap = await getDoc(doc(db, 'users', influencerId));
+                if (influencerSnap.exists()) {
+                    const influencerData = influencerSnap.data();
+                    notifyInfluencer(
+                        influencerData.email,
+                        influencerName,
+                        campData.title || 'A Campaign',
+                        'Offered',
+                        'You have been officially selected for this campaign! Please log in to accept or decline the offer.'
+                    );
+                }
+            }
+        } catch (e) {
+            console.error('Notification failed:', e);
+        }
+
         return { success: true };
     } catch (error) {
         console.error('Error assigning campaign:', error);
@@ -101,6 +151,27 @@ export const acceptCampaign = async (campaignId) => {
             status: 'accepted',
             acceptedAt: serverTimestamp()
         });
+
+        try {
+            const campSnap = await getDoc(campaignRef);
+            if (campSnap.exists()) {
+                const campData = campSnap.data();
+                const businessSnap = await getDoc(doc(db, 'users', campData.businessId));
+                if (businessSnap.exists()) {
+                    const businessData = businessSnap.data();
+                    notifyBusiness(
+                        businessData.email,
+                        businessData.name || 'Business Partner',
+                        campData.title || 'Your Campaign',
+                        'Offer Accepted',
+                        `Influencer <strong>${campData.assignedTo?.name || 'an influencer'}</strong> has accepted your campaign offer. You can now begin coordination.`
+                    );
+                }
+            }
+        } catch (e) {
+            console.error('Notification failed:', e);
+        }
+
         return { success: true };
     } catch (error) {
         console.error('Error accepting campaign:', error);
@@ -118,6 +189,27 @@ export const rejectCampaign = async (campaignId) => {
             // Optional: Remove assignment so it can be reassigned? 
             // For now, keep history but status rejected.
         });
+
+        try {
+            const campSnap = await getDoc(campaignRef);
+            if (campSnap.exists()) {
+                const campData = campSnap.data();
+                const businessSnap = await getDoc(doc(db, 'users', campData.businessId));
+                if (businessSnap.exists()) {
+                    const businessData = businessSnap.data();
+                    notifyBusiness(
+                        businessData.email,
+                        businessData.name || 'Business Partner',
+                        campData.title || 'Your Campaign',
+                        'Offer Declined',
+                        `Influencer <strong>${campData.assignedTo?.name || 'an influencer'}</strong> has declined your campaign offer.`
+                    );
+                }
+            }
+        } catch (e) {
+            console.error('Notification failed:', e);
+        }
+
         return { success: true };
     } catch (error) {
         console.error('Error rejecting campaign:', error);
@@ -190,6 +282,44 @@ export const completeCampaign = async (campaignId, paymentData) => {
                 campaignId: campaignId
             });
         });
+
+        try {
+            const campSnap = await getDoc(doc(db, 'campaigns', campaignId));
+            if (campSnap.exists()) {
+                const campData = campSnap.data();
+                
+                // Notify Business
+                const businessSnap = await getDoc(doc(db, 'users', campData.businessId));
+                if (businessSnap.exists()) {
+                    const businessData = businessSnap.data();
+                    notifyBusiness(
+                        businessData.email,
+                        businessData.name || 'Business Partner',
+                        campData.title || 'Your Campaign',
+                        'Completed',
+                        `Your campaign has been successfully marked as complete and payments have been initiated.`
+                    );
+                }
+                
+                // Notify Influencer
+                if (campData.assignedTo?.id) {
+                    const influencerSnap = await getDoc(doc(db, 'users', campData.assignedTo.id));
+                    if (influencerSnap.exists()) {
+                        const influencerData = influencerSnap.data();
+                        notifyInfluencer(
+                            influencerData.email,
+                            influencerData.name || 'Influencer',
+                            campData.title || 'Campaign',
+                            'Completed',
+                            'This campaign has been successfully marked as completed. Your payment is being processed.'
+                        );
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Notification failed:', e);
+        }
+
         return { success: true };
     } catch (error) {
         console.error('Error completing campaign:', error);

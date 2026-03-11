@@ -1,17 +1,172 @@
 'use client';
 
 import DashboardLayout from '../../../../components/dashboard/DashboardLayout';
-import { Search, Filter, Briefcase, MapPin, DollarSign, Clock, CheckCircle, Users } from 'lucide-react';
+import { Search, MapPin, CheckCircle, Users, TrendingUp, Star } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getAllCampaigns, applyToCampaign, acceptCampaign, rejectCampaign } from '../../../../lib/campaigns';
 import { useAuth } from '@/contexts/AuthContext';
+import InfluencerCampaignModal from '../../../../components/dashboard/InfluencerCampaignModal';
+import Toast from '../../../../components/ui/Toast';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MATCHING HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Calculates the influencer's average engagement rate (%) from
+ * their instagram_stats media data.
+ */
+function calculateEngagementRate(user) {
+    const media = user?.instagram_stats?.profile?.media?.data || [];
+    const followers = user?.instagram_stats?.profile?.followers_count || 0;
+    if (!followers || media.length === 0) return 0;
+
+    const totalInteractions = media.reduce((sum, post) => {
+        return sum + (post.like_count || 0) + (post.comments_count || 0);
+    }, 0);
+
+    return (totalInteractions / media.length / followers) * 100;
+}
+
+/**
+ * Maps the campaign's engagement requirement to a minimum engagement rate %.
+ */
+const ENGAGEMENT_THRESHOLDS = {
+    Suitable: 0,   // Any engagement is fine
+    Fair: 1,       // ≥ 1%
+    Good: 5,       // ≥ 5%
+    Excellent: 10  // ≥ 10%
+};
+
+/**
+ * Returns true if the influencer meets ALL hard campaign requirements,
+ * false otherwise.
+ *
+ * Rules:
+ *  1. Niche:        campaign.niche must match user.niche (case-insensitive),
+ *                   OR campaign has no niche (open to all).
+ *  2. Followers:    influencer followers ≥ campaign.minFollowers (if set).
+ *  3. Engagement:   influencer engagement rate ≥ campaign engagement threshold (if not "Suitable").
+ */
+function matchesCampaign(campaign, user) {
+    if (!user) return false;
+
+    // 1. Niche check
+    if (campaign.niche && campaign.niche !== '') {
+        const userNiche = (user.niche || '').toLowerCase().trim();
+        const campaignNiche = campaign.niche.toLowerCase().trim();
+        if (userNiche !== campaignNiche) return false;
+    }
+
+    // 2. Min followers check
+    if (campaign.minFollowers && parseInt(campaign.minFollowers) > 0) {
+        const followers = user.instagram_stats?.profile?.followers_count || 0;
+        if (followers < parseInt(campaign.minFollowers)) return false;
+    }
+
+    // 3. Engagement rate check
+    if (campaign.engagement && campaign.engagement !== 'Suitable') {
+        const minRate = ENGAGEMENT_THRESHOLDS[campaign.engagement] ?? 0;
+        const userRate = calculateEngagementRate(user);
+        if (userRate < minRate) return false;
+    }
+
+    return true;
+}
+
+/**
+ * Returns a numeric score (0–100) representing how strong the match is.
+ * Used to sort the "Recommended" tab.
+ *
+ *  +50 pts — Niche matches
+ *  +30 pts — Follower count qualifies
+ *  +20 pts — Engagement rate qualifies
+ */
+function getMatchScore(campaign, user) {
+    if (!user) return 0;
+    let score = 0;
+
+    // Niche (50 pts)
+    const hasNicheReq = campaign.niche && campaign.niche !== '';
+    if (!hasNicheReq) {
+        score += 25; // Neutral — open to all, partial credit
+    } else {
+        const nicheMatch = (user.niche || '').toLowerCase().trim() === campaign.niche.toLowerCase().trim();
+        if (nicheMatch) score += 50;
+    }
+
+    // Followers (30 pts)
+    if (!campaign.minFollowers || parseInt(campaign.minFollowers) <= 0) {
+        score += 15; // No requirement, partial credit
+    } else {
+        const followers = user.instagram_stats?.profile?.followers_count || 0;
+        if (followers >= parseInt(campaign.minFollowers)) score += 30;
+    }
+
+    // Engagement (20 pts)
+    if (!campaign.engagement || campaign.engagement === 'Suitable') {
+        score += 10; // No requirement, partial credit
+    } else {
+        const minRate = ENGAGEMENT_THRESHOLDS[campaign.engagement] ?? 0;
+        const userRate = calculateEngagementRate(user);
+        if (userRate >= minRate) score += 20;
+    }
+
+    return score;
+}
+
+/**
+ * Returns an array of human-readable reasons the influencer qualifies.
+ * Used on the campaign card to show a "match badge".
+ */
+function getMatchReasons(campaign, user) {
+    const reasons = [];
+    if (!user) return reasons;
+
+    const hasNicheReq = campaign.niche && campaign.niche !== '';
+    if (hasNicheReq && (user.niche || '').toLowerCase().trim() === campaign.niche.toLowerCase().trim()) {
+        reasons.push({ label: `${campaign.niche} niche`, color: 'text-purple-600 bg-purple-50 border-purple-100' });
+    }
+    if (!hasNicheReq) {
+        reasons.push({ label: 'Open to all niches', color: 'text-gray-500 bg-gray-50 border-gray-100' });
+    }
+
+    const followers = user.instagram_stats?.profile?.followers_count || 0;
+    if (campaign.minFollowers && parseInt(campaign.minFollowers) > 0) {
+        if (followers >= parseInt(campaign.minFollowers)) {
+            reasons.push({ label: `${(followers / 1000).toFixed(1)}k followers ✓`, color: 'text-blue-600 bg-blue-50 border-blue-100' });
+        }
+    }
+
+    if (campaign.engagement && campaign.engagement !== 'Suitable') {
+        const minRate = ENGAGEMENT_THRESHOLDS[campaign.engagement] ?? 0;
+        const userRate = calculateEngagementRate(user);
+        if (userRate >= minRate) {
+            reasons.push({ label: `${userRate.toFixed(1)}% engagement ✓`, color: 'text-green-600 bg-green-50 border-green-100' });
+        }
+    }
+
+    return reasons;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGE COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function InfluencerCampaigns() {
     const { userData: user, loading: authLoading } = useAuth();
-    const [activeTab, setActiveTab] = useState('browse');
+    const [activeTab, setActiveTab] = useState('recommended');
     const [campaigns, setCampaigns] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [actionLoading, setActionLoading] = useState(null); // campaignId check for loading
+    const [searchQuery, setSearchQuery] = useState('');
+    const [actionLoading, setActionLoading] = useState(null);
+    const [selectedCampaign, setSelectedCampaign] = useState(null);
+    const [toast, setToast] = useState(null);
+
+    const showToast = (message, type = 'success') => {
+        setToast({ message, type });
+    };
 
     useEffect(() => {
         fetchCampaigns();
@@ -27,7 +182,7 @@ export default function InfluencerCampaigns() {
     };
 
     const handleApply = async (campaign) => {
-        if (!user) return alert('Please log in to apply.');
+        if (!user) return showToast('Please log in to apply.', 'error');
         if (!confirm(`Apply for "${campaign.title}"?`)) return;
 
         setActionLoading(campaign.id);
@@ -39,10 +194,11 @@ export default function InfluencerCampaigns() {
             });
 
             if (res.success) {
-                alert('Application submitted!');
+                showToast('Application submitted!');
+                setSelectedCampaign(null); // Close modal if open
                 fetchCampaigns();
             } else {
-                alert('Failed to apply: ' + res.error);
+                showToast('Failed to apply: ' + res.error, 'error');
             }
         } finally {
             setActionLoading(null);
@@ -55,10 +211,10 @@ export default function InfluencerCampaigns() {
         try {
             const res = await acceptCampaign(campaign.id);
             if (res.success) {
-                alert('Offer Accepted!');
+                showToast('Offer Accepted!');
                 fetchCampaigns();
             } else {
-                alert('Failed: ' + res.error);
+                showToast('Failed: ' + res.error, 'error');
             }
         } finally {
             setActionLoading(null);
@@ -78,39 +234,63 @@ export default function InfluencerCampaigns() {
         }
     };
 
-    // Filter campaigns
+    // ── Derived campaign lists ──────────────────────────────────────────────
+
     const activeCampaigns = campaigns.filter(c => c.status === 'active');
-    const myApplications = campaigns.filter(c => (c.applicants || []).some(app => app.id === user?.id));
-    const myOffers = campaigns.filter(c => c.status === 'offered' && c.assignedTo?.id === user?.id);
 
-    // Recommended Logic
-    const recommendedCampaigns = activeCampaigns.filter(c => {
-        if (!user) return false;
-        // 1. Niche Match (strict)
-        const nicheMatch = c.niche && user.niche && c.niche.toLowerCase() === user.niche.toLowerCase();
+    // Already applied campaigns (any status)
+    const myApplications = campaigns.filter(c =>
+        (c.applicants || []).some(app => app.id === user?.id)
+    );
+    const appliedIds = new Set(myApplications.map(c => c.id));
 
-        // 2. Follower Count Check (if specified by business)
-        let followerMatch = true;
-        if (c.minFollowers) {
-            const userFollowers = user.instagram_stats?.profile?.followers_count || 0;
-            followerMatch = userFollowers >= parseInt(c.minFollowers);
-        }
+    // Offers specifically directed at this influencer
+    const myOffers = campaigns.filter(c =>
+        c.status === 'offered' && c.assignedTo?.id === user?.id
+    );
 
-        return nicheMatch && followerMatch;
-    });
+    /**
+     * Browse tab:
+     *  - Active campaigns the influencer hasn't applied to yet
+     *  - Filtered by matchesCampaign() — ONLY campaigns they qualify for
+     */
+    const browseCampaigns = activeCampaigns
+        .filter(c => !appliedIds.has(c.id))
+        .filter(c => matchesCampaign(c, user));
+
+    /**
+     * Recommended tab:
+     *  - Subset of browseCampaigns sorted by match score (highest first)
+     *  - Shows only campaigns with score ≥ 50 (at least one strong signal)
+     */
+    const recommendedCampaigns = browseCampaigns
+        .map(c => ({ campaign: c, score: getMatchScore(c, user) }))
+        .filter(({ score }) => score >= 50)
+        .sort((a, b) => b.score - a.score)
+        .map(({ campaign }) => campaign);
+
+    // Search filter applied on top of tab selection
+    const applySearch = (list) => {
+        if (!searchQuery.trim()) return list;
+        const q = searchQuery.toLowerCase();
+        return list.filter(c =>
+            c.title?.toLowerCase().includes(q) ||
+            c.businessName?.toLowerCase().includes(q) ||
+            c.niche?.toLowerCase().includes(q)
+        );
+    };
 
     let displayedCampaigns = [];
-    if (activeTab === 'browse') displayedCampaigns = activeCampaigns.filter(c => !(c.applicants || []).some(app => app.id === user?.id));
-    if (activeTab === 'recommended') displayedCampaigns = recommendedCampaigns.filter(c => !(c.applicants || []).some(app => app.id === user?.id));;
-    if (activeTab === 'applications') displayedCampaigns = myApplications;
-    if (activeTab === 'offers') displayedCampaigns = myOffers;
+    if (activeTab === 'recommended') displayedCampaigns = applySearch(recommendedCampaigns);
+    if (activeTab === 'applications') displayedCampaigns = applySearch(myApplications);
 
     return (
         <DashboardLayout role="influencer" title="Campaigns">
+
             {/* Tabs & Search */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div className="flex items-center space-x-6 border-b border-gray-200 w-full md:w-auto overflow-x-auto">
-                    {['browse', 'recommended', 'applications', 'offers'].map((tab) => (
+                    {['recommended', 'applications'].map((tab) => (
                         <button
                             key={tab}
                             className={`pb-3 px-2 text-base font-medium transition-all capitalize border-b-2 whitespace-nowrap ${activeTab === tab
@@ -119,7 +299,17 @@ export default function InfluencerCampaigns() {
                                 }`}
                             onClick={() => setActiveTab(tab)}
                         >
-                            {tab === 'browse' ? 'Browse Opportunities' : tab === 'recommended' ? 'Recommended for You' : tab === 'applications' ? 'My Applications' : 'My Offers'}
+                            {tab === 'recommended' ? (
+                                <span className="flex items-center gap-1.5">
+                                    <Star className="w-3.5 h-3.5" />
+                                    Recommended
+                                    {recommendedCampaigns.length > 0 && (
+                                        <span className="bg-[#2008b9] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                                            {recommendedCampaigns.length}
+                                        </span>
+                                    )}
+                                </span>
+                            ) : 'My Applications'}
                         </button>
                     ))}
                 </div>
@@ -129,6 +319,8 @@ export default function InfluencerCampaigns() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <input
                             type="text"
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
                             placeholder="Search campaigns..."
                             className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
                         />
@@ -138,16 +330,14 @@ export default function InfluencerCampaigns() {
 
             {/* Campaign Grid */}
             {loading ? (
-                <div className="text-center py-12 text-gray-500">Loading campaigns...</div>
-            ) : displayedCampaigns.length === 0 ? (
-                <div className="text-center py-12 text-gray-500 bg-white rounded-2xl border border-gray-100">
-                    {activeTab === 'browse' ? "No active campaigns found at the moment." :
-                        activeTab === 'recommended' ? "No campaigns match your niche/profile right now." :
-                            activeTab === 'applications' ? "You haven't applied to any campaigns yet." :
-                                "No offers yet."}
+                <div className="flex flex-col items-center justify-center py-20 gap-4">
+                    <div className="w-12 h-12 rounded-full border-4 border-[#2008b9]/20 border-t-[#2008b9] animate-spin" />
+                    <p className="text-sm text-gray-400 font-medium">Finding campaigns for you...</p>
                 </div>
+            ) : displayedCampaigns.length === 0 ? (
+                <EmptyState tab={activeTab} user={user} />
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {displayedCampaigns.map((campaign) => (
                         <CampaignCard
                             key={campaign.id}
@@ -158,155 +348,267 @@ export default function InfluencerCampaigns() {
                             onReject={handleReject}
                             loading={actionLoading === campaign.id}
                             type={activeTab}
+                            onClick={() => setSelectedCampaign(campaign)}
                         />
                     ))}
                 </div>
             )}
+
+            {/* Campaign Details Modal */}
+            {selectedCampaign && (
+                <InfluencerCampaignModal
+                    campaign={selectedCampaign}
+                    userApplied={appliedIds.has(selectedCampaign.id)}
+                    loading={actionLoading === selectedCampaign.id}
+                    onClose={() => setSelectedCampaign(null)}
+                    onApply={handleApply}
+                />
+            )}
+
+            {/* Notifications */}
+            <AnimatePresence>
+                {toast && (
+                    <Toast
+                        message={toast.message}
+                        type={toast.type}
+                        onClose={() => setToast(null)}
+                    />
+                )}
+            </AnimatePresence>
         </DashboardLayout>
     );
 }
 
-const CampaignCard = ({ campaign, user, onApply, onAccept, onReject, loading, type }) => {
+// ─────────────────────────────────────────────────────────────────────────────
+// EMPTY STATE
+// ─────────────────────────────────────────────────────────────────────────────
 
-    // Status Badge Logic
-    let statusBadge = null;
+const EMPTY_CONFIG = {
+    recommended: {
+        icon: (
+            <svg viewBox="0 0 64 64" fill="none" className="w-16 h-16">
+                <path d="M32 8l6 13h14l-11 8 4 14-13-9-13 9 4-14L12 21h14z" stroke="#2008b9" strokeWidth="3" strokeLinejoin="round" />
+            </svg>
+        ),
+        heading: 'No strong matches yet',
+        subtext: 'The Recommended tab surfaces campaigns that align closely with your niche, audience size, and engagement rate.',
+        tip: '💡 Tip: A complete profile with Instagram stats gives the algorithm more to work with.',
+    },
+    applications: {
+        icon: (
+            <svg viewBox="0 0 64 64" fill="none" className="w-16 h-16">
+                <rect x="12" y="10" width="40" height="48" rx="5" stroke="#2008b9" strokeWidth="3" />
+                <path d="M22 24h20M22 34h14M22 44h8" stroke="#2008b9" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
+        ),
+        heading: "You haven't applied yet",
+        subtext: "Browse active campaigns that match your profile and submit your first application.",
+        tip: "💡 Tip: Businesses review applications quickly — don't wait!",
+    },
+};
 
-    if (type === 'applications') {
-        const application = (campaign.applicants || []).find(a => a.id === user?.id);
-        const status = application?.status || 'Applied';
-        statusBadge = (
-            <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide ${status === 'accepted' ? 'bg-green-100 text-green-700' :
-                status === 'rejected' ? 'bg-red-100 text-red-700' :
-                    'bg-blue-100 text-blue-700'
-                }`}>
-                {status}
-            </span>
-        );
-    } else if (type === 'offers') {
-        statusBadge = (
-            <span className="bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide flex items-center gap-1">
-                <Users className="w-3 h-3" />
-                Special Offer
-            </span>
-        );
-    } else {
-        // In browse mode, show match score or new tag
-        statusBadge = (
-            <span className="bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-                {campaign.platform || 'Instagram'}
-            </span>
-        );
-    }
+function EmptyState({ tab }) {
+    const config = EMPTY_CONFIG[tab] || EMPTY_CONFIG.recommended;
 
     return (
-        <div className="bg-white rounded-[1.5rem] p-6 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 group flex flex-col h-full hover:-translate-y-1 relative overflow-hidden">
-            {/* Top accent bar */}
-            <div className={`absolute top-0 left-0 w-full h-1 ${campaign.type === 'Paid' ? 'bg-green-500' : 'bg-orange-500'}`}></div>
+        <div className="flex flex-col items-center justify-center py-20 px-6 bg-white rounded-2xl border border-gray-100">
+            {/* Icon container */}
+            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center mb-6 shadow-inner">
+                {config.icon}
+            </div>
 
-            {/* Header */}
-            <div className="flex items-start justify-between mb-5 mt-2">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 flex items-center justify-center text-[#343C6A] font-bold text-lg shadow-inner">
-                        {campaign.businessName?.[0] || 'B'}
+            {/* Heading */}
+            <h3 className="text-xl font-bold text-[#343C6A] mb-2 text-center">
+                {config.heading}
+            </h3>
+
+            {/* Subtext */}
+            <p className="text-sm text-gray-400 text-center max-w-sm leading-relaxed mb-6">
+                {config.subtext}
+            </p>
+
+            {/* Tip pill */}
+            <div className="bg-amber-50 border border-amber-100 rounded-xl px-5 py-3 text-xs text-amber-700 font-medium text-center max-w-sm">
+                {config.tip}
+            </div>
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CAMPAIGN CARD
+// ─────────────────────────────────────────────────────────────────────────────
+
+const NICHE_COLORS = {
+    Fashion: { text: 'text-indigo-600', border: 'border-indigo-100', light: 'bg-indigo-50/30', bg: 'bg-indigo-600' },
+    Beauty: { text: 'text-indigo-600', border: 'border-indigo-100', light: 'bg-indigo-50/30', bg: 'bg-indigo-600' },
+    Tech: { text: 'text-indigo-600', border: 'border-indigo-100', light: 'bg-indigo-50/30', bg: 'bg-indigo-600' },
+    Lifestyle: { text: 'text-indigo-600', border: 'border-indigo-100', light: 'bg-indigo-50/30', bg: 'bg-indigo-600' },
+    Fitness: { text: 'text-indigo-600', border: 'border-indigo-100', light: 'bg-indigo-50/30', bg: 'bg-indigo-600' },
+    Travel: { text: 'text-indigo-600', border: 'border-indigo-100', light: 'bg-indigo-50/30', bg: 'bg-indigo-600' },
+    Food: { text: 'text-indigo-600', border: 'border-indigo-100', light: 'bg-indigo-50/30', bg: 'bg-indigo-600' },
+    General: { text: 'text-gray-600', border: 'border-gray-100', light: 'bg-gray-50/30', bg: 'bg-gray-400' },
+};
+
+const DEFAULT_COLOR = { bg: 'bg-[#2008b9]', light: 'bg-gray-50/50', text: 'text-gray-600', border: 'border-gray-200' };
+
+const CampaignCard = ({ campaign, user, onApply, onAccept, onReject, loading, type, onClick }) => {
+    const niche = campaign.niche || 'General';
+    const colors = NICHE_COLORS[niche] || NICHE_COLORS.General;
+    const isPaid = campaign.type === 'Paid';
+    const payout = Math.round(parseInt(campaign.budget || 0) * 0.25);
+
+    // Application status
+    const application = (campaign.applicants || []).find(a => a.id === user?.id);
+    const appStatus = application?.status || 'applied';
+
+    const statusStyles = {
+        accepted: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        rejected: 'bg-red-50 text-red-600 border-red-200',
+        applied: 'bg-blue-50 text-blue-600 border-blue-200',
+    };
+
+    // Match data (browse/recommended only)
+    const matchReasons = (type === 'browse' || type === 'recommended') ? getMatchReasons(campaign, user) : [];
+    const matchScore = (type === 'browse' || type === 'recommended') ? getMatchScore(campaign, user) : null;
+
+    return (
+        <div
+            onClick={onClick}
+            tabIndex={-1}
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-200/30 transition-all duration-300 group flex flex-col overflow-hidden hover:-translate-y-0.5 cursor-pointer max-w-sm outline-none focus:outline-none focus-visible:outline-none ring-0 select-none"
+        >
+
+            {/* ── Card Header ── */}
+            <div className={`relative px-5 pt-5 pb-3 bg-gray-50/30`}>
+
+                {/* Type pill — top right */}
+                <div className="absolute top-4 right-4">
+                    {type === 'applications' ? (
+                        <span className={`text-[11px] font-bold px-3 py-1 rounded-full border capitalize ${statusStyles[appStatus] || statusStyles.applied}`}>
+                            {appStatus}
+                        </span>
+                    ) : (
+                        <span className={`text-[11px] font-bold px-3 py-1 rounded-full border ${isPaid ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'}`}>
+                            {isPaid ? '💰 Paid' : '🎁 Gifted'}
+                        </span>
+                    )}
+                </div>
+
+                {/* Business avatar + name */}
+                <div className="flex items-center gap-2.5 mb-3">
+                    <div className={`w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-extrabold text-sm shadow-sm`}>
+                        {campaign.businessName?.[0]?.toUpperCase() || 'B'}
                     </div>
                     <div>
-                        <h3 className="font-bold text-[#343C6A] text-base leading-tight">{campaign.businessName || 'Business Name'}</h3>
-                        <p className="text-xs text-gray-400 font-medium mt-0.5 flex items-center gap-1">
-                            <MapPin className="w-3 h-3" /> {campaign.location || 'Global'}
+                        <p className="font-bold text-[#343C6A] text-sm leading-tight">{campaign.businessName || 'Brand'}</p>
+                        <p className="text-[11px] text-gray-400 flex items-center gap-1 mt-0.5">
+                            <MapPin className="w-3 h-3" />
+                            {campaign.location || 'Global'}
                         </p>
                     </div>
                 </div>
-                {statusBadge}
+
+                {/* Niche + goal tags */}
+                <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg border bg-gray-50 text-gray-500 border-gray-200`}>
+                        {niche}
+                    </span>
+                    {campaign.goal && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg border bg-white text-gray-500 border-gray-200">
+                            {campaign.goal}
+                        </span>
+                    )}
+                </div>
             </div>
 
-            {/* Campaign Title & Niche */}
-            <div className="mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 border border-gray-200 px-2 py-0.5 rounded-md">
-                        {campaign.niche || 'General'}
-                    </span>
-                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${campaign.type === 'Paid' ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-orange-50 text-orange-600 border border-orange-100'}`}>
-                        {campaign.type || 'Campaign'}
-                    </span>
-                </div>
-                <h4 className="font-extrabold text-xl text-gray-800 leading-snug group-hover:text-[#2008b9] transition-colors line-clamp-2" title={campaign.title}>
+            {/* ── Campaign title ── */}
+            <div className="px-5 pt-3 pb-2">
+                <h4 className="font-bold text-[15px] text-gray-800 leading-tight group-hover:text-[#2008b9] transition-colors duration-200 line-clamp-1">
                     {campaign.title}
                 </h4>
-            </div>
-
-            {/* Requirements Grid */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
-                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide mb-1">Followers</p>
-                    <p className="font-bold text-gray-700 text-sm flex items-center gap-1.5">
-                        <Users className="w-4 h-4 text-blue-500" />
-                        {campaign.minFollowers ? `${(parseInt(campaign.minFollowers) / 1000).toFixed(1)}k+` : 'Any'}
-                    </p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide mb-1">Engagement</p>
-                    <p className="font-bold text-gray-700 text-sm flex items-center gap-1.5">
-                        <CheckCircle className="w-4 h-4 text-purple-500" />
-                        {campaign.engagement ? `${campaign.engagement}%` : 'N/A'}
-                    </p>
-                </div>
-            </div>
-
-            {/* Budget / Value */}
-            <div className="mt-auto pt-5 border-t border-gray-100 flex items-center justify-between mb-6">
-                <div>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide mb-0.5">Budget</p>
-                    <p className="text-2xl font-extrabold text-[#343C6A]">
-                        ₹{Math.round(parseInt(campaign.budget || 0) * 0.25).toLocaleString()}
-                    </p>
-                </div>
-                {campaign.deadline && (
-                    <div className="text-right">
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide mb-0.5">Deadline</p>
-                        <p className="text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded-md">
-                            {new Date(campaign.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                        </p>
-                    </div>
+                {campaign.description && (
+                    <p className="text-[11px] text-gray-400 mt-1 line-clamp-1 leading-normal italic">"{campaign.description}"</p>
                 )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="grid grid-cols-1 gap-3">
-                {(type === 'browse' || type === 'recommended') && (
+            {/* ── Stats row ── */}
+            <div className="px-5 pb-3 grid grid-cols-2 gap-2">
+                <div className="flex items-center gap-2 bg-gray-50/50 rounded-lg p-2 border border-gray-100">
+                    <Users className="w-3.5 h-3.5 text-gray-400" />
+                    <div>
+                        <p className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Followers</p>
+                        <p className="font-bold text-gray-700 text-[11px]">
+                            {campaign.minFollowers && parseInt(campaign.minFollowers) > 0
+                                ? `${(parseInt(campaign.minFollowers) / 1000).toFixed(1)}k+`
+                                : 'Any'}
+                        </p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 bg-gray-50/50 rounded-lg p-2 border border-gray-100">
+                    <TrendingUp className="w-3.5 h-3.5 text-gray-400" />
+                    <div>
+                        <p className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Engagement</p>
+                        <p className="font-bold text-gray-700 text-[11px]">{campaign.engagement || 'Any'}</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Match reasons (browse/recommended) ── */}
+            {matchReasons.length > 0 && (
+                <div className="px-5 pb-2 flex flex-wrap gap-1 items-center">
+                    {matchReasons.map((r, i) => (
+                        <span key={i} className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border ${r.color}`}>
+                            {r.label}
+                        </span>
+                    ))}
+                </div>
+            )}
+
+            {/* ── Budget highlight + deadline ── */}
+            <div className="mx-5 mb-4 mt-auto rounded-lg bg-gray-50 border border-gray-100 px-3 py-2.5 flex items-center justify-between">
+                <div>
+                    <p className="text-[8px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Earnings</p>
+                    <p className="text-lg font-black text-[#2008b9] tracking-tight">
+                        ₹{payout.toLocaleString()}
+                    </p>
+                </div>
+                <div className="text-right">
+                    <p className="text-[8px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Deadline</p>
+                    <span className="text-[10px] font-bold text-gray-600">
+                        {campaign.deadline ? new Date(campaign.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'Flexible'}
+                    </span>
+                </div>
+            </div>
+
+            {/* ── Action Buttons ── */}
+            <div className="px-5 pb-5">
+                {type === 'recommended' && (
                     <button
-                        onClick={() => onApply(campaign)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onApply(campaign);
+                        }}
                         disabled={loading}
-                        className="w-full py-3.5 rounded-xl bg-[#2008b9] text-white font-bold hover:bg-blue-800 shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 disabled:hover:translate-y-0"
+                        className="w-full py-2.5 rounded-lg bg-[#2008b9] text-white font-bold text-xs hover:bg-blue-800 shadow-md shadow-blue-500/10 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
                     >
-                        {loading ? <span className="flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Applying...</span> : 'Apply Now'}
+                        {loading
+                            ? <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> ...</>
+                            : <>Apply Now <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg></>
+                        }
                     </button>
                 )}
 
-                {type === 'offers' && (
-                    <div className="flex gap-3">
-                        <button
-                            onClick={() => onReject(campaign)}
-                            disabled={loading}
-                            className="flex-1 py-3.5 rounded-xl border-2 border-red-100 text-red-600 font-bold hover:bg-red-50 hover:border-red-200 transition-all active:scale-95 disabled:opacity-50"
-                        >
-                            Reject
-                        </button>
-                        <button
-                            onClick={() => onAccept(campaign)}
-                            disabled={loading}
-                            className="flex-[2] py-3.5 rounded-xl bg-[#2008b9] text-white font-bold hover:bg-blue-800 shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5 active:scale-95 disabled:opacity-50"
-                        >
-                            Accept Offer
-                        </button>
-                    </div>
-                )}
-
                 {type === 'applications' && (
-                    <div className="w-full py-3.5 rounded-xl bg-gray-50 text-gray-500 font-bold text-center border border-gray-200 select-none flex items-center justify-center gap-2">
-                        {statusBadge}
+                    <div className={`w-full py-2 rounded-lg text-center text-[10px] font-bold border select-none ${statusStyles[appStatus] || statusStyles.applied}`}>
+                        {appStatus === 'accepted' ? '✓ Accepted'
+                            : appStatus === 'rejected' ? '✕ Not Selected'
+                                : '⏳ Pending'}
                     </div>
                 )}
             </div>
         </div>
     );
 };
+

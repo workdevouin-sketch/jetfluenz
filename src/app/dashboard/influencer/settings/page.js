@@ -6,8 +6,10 @@ import { useState, useEffect } from 'react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../../lib/firebase';
 import LocationAutocompleteAdmin from '../../../../components/admin/LocationAutocompleteAdmin';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function InfluencerSettings() {
+    const { userData: authUser } = useAuth();
     const [activeTab, setActiveTab] = useState('profile');
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -19,9 +21,8 @@ export default function InfluencerSettings() {
     useEffect(() => {
         const fetchUserData = async () => {
             try {
-                const storedUser = JSON.parse(localStorage.getItem('jetfluenz_influencer_session'));
-                if (storedUser?.id) {
-                    const docRef = doc(db, 'users', storedUser.id);
+                if (authUser?.id) {
+                    const docRef = doc(db, 'users', authUser.id);
                     const docSnap = await getDoc(docRef);
                     if (docSnap.exists()) {
                         setUserData(docSnap.data());
@@ -36,7 +37,7 @@ export default function InfluencerSettings() {
         };
 
         fetchUserData();
-    }, []);
+    }, [authUser]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -81,8 +82,8 @@ export default function InfluencerSettings() {
                 }
             }
 
-            const storedUser = JSON.parse(localStorage.getItem('jetfluenz_influencer_session'));
-            const docRef = doc(db, 'users', storedUser.id);
+            if (!authUser?.id) throw new Error('Not authenticated');
+            const docRef = doc(db, 'users', authUser.id);
             await updateDoc(docRef, updatedData);
             setUserData(prev => ({ ...prev, ...updatedData })); // Keep local state in sync
 
