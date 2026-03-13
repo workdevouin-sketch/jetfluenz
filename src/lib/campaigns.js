@@ -14,11 +14,30 @@ export const createCampaign = async (campaignData) => {
         };
         const docRef = await addDoc(collection(db, 'campaigns'), data);
         
-        // Notify admin about the new campaign
+        // 1. Notify admin about the new campaign
         notifyAdmin(
             'New Campaign Created', 
             `A new campaign titled "${campaignData.title}" was created by Business ID: ${campaignData.businessId}.`
         );
+
+        // 2. Confirm to the business that their campaign was posted
+        try {
+            if (campaignData.businessId) {
+                const businessSnap = await getDoc(doc(db, 'users', campaignData.businessId));
+                if (businessSnap.exists()) {
+                    const businessData = businessSnap.data();
+                    notifyBusiness(
+                        businessData.email,
+                        businessData.name || 'Business Partner',
+                        campaignData.title || 'Your Campaign',
+                        'Campaign Posted',
+                        `Your campaign <strong>${campaignData.title}</strong> has been successfully posted on Jetfluenz and is now visible to influencers. You will be notified as soon as someone applies!`
+                    );
+                }
+            }
+        } catch (e) {
+            console.error('Business confirmation notification failed:', e);
+        }
         
         return { success: true, id: docRef.id };
     } catch (error) {
@@ -47,6 +66,8 @@ export const applyToCampaign = async (campaignId, influencerData) => {
             const campSnap = await getDoc(campaignRef);
             if (campSnap.exists()) {
                 const campData = campSnap.data();
+
+                // 1. Notify the business of the new applicant
                 const businessSnap = await getDoc(doc(db, 'users', campData.businessId));
                 if (businessSnap.exists()) {
                     const businessData = businessSnap.data();
@@ -56,6 +77,17 @@ export const applyToCampaign = async (campaignId, influencerData) => {
                         campData.title || 'A Campaign',
                         'New Applicant',
                         `<strong>${influencerData.name || 'An Influencer'}</strong> has applied for your campaign. Please review their profile in your dashboard.`
+                    );
+                }
+
+                // 2. Confirm to the influencer that their application was received
+                if (influencerData.email) {
+                    notifyInfluencer(
+                        influencerData.email,
+                        influencerData.name || 'Influencer',
+                        campData.title || 'A Campaign',
+                        'Application Received',
+                        `Your application for <strong>${campData.title}</strong> by <strong>${campData.businessName || 'the business'}</strong> has been successfully submitted. We'll notify you once the business reviews your profile!`
                     );
                 }
             }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../../components/dashboard/DashboardLayout';
-import { Check, X, ArrowRight, TrendingUp, Users, RefreshCw } from 'lucide-react';
+import { ArrowRight, TrendingUp, Users, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { doc, getDoc, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
@@ -77,75 +77,17 @@ export default function InfluencerDashboard() {
                     {/* LEFT COLUMN (3/5 width - roughly 60%) */}
                     <div className="lg:col-span-3 space-y-8">
 
-                        {/* Collaboration Requests / Assigned Campaigns */}
+                        {/* Active Collaborations — shown when business selects the influencer */}
                         <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
-                            <h3 className="text-xl font-bold text-[#343C6A] mb-6">Collaboration Requests</h3>
+                            <h3 className="text-xl font-bold text-[#343C6A] mb-6">Active Collaborations</h3>
 
-                            {assignedCampaigns.filter(c => ['offered', 'active', 'assigned'].includes(c.status)).length === 0 ? (
+                            {assignedCampaigns.filter(c => ['in_progress', 'accepted', 'offered', 'active', 'assigned'].includes(c.status)).length === 0 ? (
                                 <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-2xl">
                                     <p>No active campaign requests yet.</p>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
-                                    {assignedCampaigns.filter(c => ['offered', 'active', 'assigned'].includes(c.status)).map(campaign => (
-                                        <div key={campaign.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-pink-100 text-pink-500 rounded-full flex items-center justify-center font-bold text-xl">
-                                                    {campaign.businessName?.[0] || 'B'}
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold text-[#343C6A]">{campaign.title}</h4>
-                                                    <p className="text-sm text-blue-500">by {campaign.businessName}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-6">
-                                                <div className="text-right hidden sm:block">
-                                                    <p className="font-bold text-[#343C6A] text-lg">${campaign.budget}</p>
-                                                    <p className="text-xs text-gray-400">Budget</p>
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <button
-                                                        onClick={async () => {
-                                                            const { acceptCampaign } = await import('../../../lib/campaigns');
-                                                            await acceptCampaign(campaign.id);
-                                                            // Refresh list
-                                                            setAssignedCampaigns(prev => prev.map(c => c.id === campaign.id ? { ...c, status: 'accepted' } : c));
-                                                        }}
-                                                        className="w-10 h-10 rounded-full bg-green-100 text-green-500 flex items-center justify-center hover:bg-green-200 transition-colors"
-                                                        title="Accept"
-                                                    >
-                                                        <Check className="w-5 h-5" />
-                                                    </button>
-                                                    <button
-                                                        onClick={async () => {
-                                                            const { rejectCampaign } = await import('../../../lib/campaigns');
-                                                            await rejectCampaign(campaign.id);
-                                                            setAssignedCampaigns(prev => prev.filter(c => c.id !== campaign.id));
-                                                        }}
-                                                        className="w-10 h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center hover:bg-red-200 transition-colors"
-                                                        title="Decline"
-                                                    >
-                                                        <X className="w-5 h-5" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Active Campaigns (Accepted) */}
-                        <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
-                            <h3 className="text-xl font-bold text-[#343C6A] mb-6">Active Campaigns</h3>
-
-                            {assignedCampaigns.filter(c => c.status === 'accepted').length === 0 ? (
-                                <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-2xl">
-                                    <p>No active collaborations yet.</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    {assignedCampaigns.filter(c => c.status === 'accepted').map(campaign => (
+                                    {assignedCampaigns.filter(c => ['in_progress', 'accepted', 'offered', 'active', 'assigned'].includes(c.status)).map(campaign => (
                                         <div key={campaign.id} className="flex items-center justify-between p-4 bg-blue-50/50 rounded-2xl hover:bg-blue-50 transition-colors border border-blue-100">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-12 h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center font-bold text-xl">
@@ -153,12 +95,48 @@ export default function InfluencerDashboard() {
                                                 </div>
                                                 <div>
                                                     <h4 className="font-bold text-[#343C6A]">{campaign.title}</h4>
-                                                    <p className="text-sm text-gray-500">Working with {campaign.businessName}</p>
+                                                    <p className="text-sm text-blue-500">by {campaign.businessName}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="text-right hidden sm:block">
+                                                    <p className="font-bold text-[#343C6A] text-lg">${campaign.budget}</p>
+                                                    <p className="text-xs text-gray-400">Budget</p>
+                                                </div>
+                                                <span className="px-3 py-1 bg-green-100 text-green-600 rounded-full text-xs font-bold">
+                                                    In Progress
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Completed Campaigns */}
+                        <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
+                            <h3 className="text-xl font-bold text-[#343C6A] mb-6">Completed Campaigns</h3>
+
+                            {assignedCampaigns.filter(c => c.status === 'completed').length === 0 ? (
+                                <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-2xl">
+                                    <p>No completed collaborations yet.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {assignedCampaigns.filter(c => c.status === 'completed').map(campaign => (
+                                        <div key={campaign.id} className="flex items-center justify-between p-4 bg-green-50/50 rounded-2xl border border-green-100">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 bg-green-100 text-green-500 rounded-full flex items-center justify-center font-bold text-xl">
+                                                    <TrendingUp className="w-6 h-6" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-[#343C6A]">{campaign.title}</h4>
+                                                    <p className="text-sm text-gray-500">Collaborated with {campaign.businessName}</p>
                                                 </div>
                                             </div>
                                             <div className="text-right">
                                                 <span className="px-3 py-1 bg-green-100 text-green-600 rounded-full text-xs font-bold">
-                                                    In Progress
+                                                    Completed
                                                 </span>
                                             </div>
                                         </div>

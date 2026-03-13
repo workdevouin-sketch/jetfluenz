@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Calendar, DollarSign, Users, ExternalLink, CheckCircle, Clock, Loader2 } from 'lucide-react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { notifyInfluencer } from '@/actions/notifications';
 
 export default function CampaignDetailsModal({ campaign, onClose }) {
     const [selectedApplicant, setSelectedApplicant] = useState(null);
@@ -41,44 +42,75 @@ export default function CampaignDetailsModal({ campaign, onClose }) {
 
     const handleAcceptCandidate = async () => {
         if (!selectedApplicant || !campaign.id) return;
-        if (!confirm(`Are you sure you want to accept ${selectedApplicant.name}? This will close the campaign.`)) return;
+        if (!confirm(`Are you sure you want to select ${selectedApplicant.name}? This will put the campaign in progress.`)) return;
 
         setAccepting(true);
         try {
             const campaignRef = doc(db, 'campaigns', campaign.id);
-            // 1. Get latest campaign data to ensure we have current applicants
             const campaignSnap = await getDoc(campaignRef);
             if (!campaignSnap.exists()) throw new Error("Campaign not found");
 
             const campaignData = campaignSnap.data();
 
-            // 2. Update applicants array
+            // Mark selected influencer as accepted, others as rejected
             const updatedApplicants = (campaignData.applicants || []).map(app => {
                 if (app.id === selectedApplicant.id) {
                     return { ...app, status: 'accepted' };
                 }
-                return app; // Keep others as is, or mark 'rejected' if desired
+                return { ...app, status: 'rejected' };
             });
 
-            // 3. Update Document
+            // Set campaign straight to in_progress — no influencer acceptance step needed
             await updateDoc(campaignRef, {
-                status: 'offered',
+                status: 'in_progress',
                 applicants: updatedApplicants,
                 assignedTo: {
                     id: selectedApplicant.id,
                     name: selectedApplicant.name,
                     email: selectedApplicant.email,
                     profilePicture: stats?.profilePic || selectedApplicant.profile_picture_url || ''
-                }
+                },
+                startedAt: new Date().toISOString()
             });
 
-            alert(`Successfully accepted ${selectedApplicant.name}!`);
-            onClose(); // Close modal to refresh or just hide (Page refresh might be needed to reflect status change on UI)
-            window.location.reload(); // Force reload to update dashboard state (Simple solution for now)
+            // Notify the selected influencer via email
+            try {
+                await notifyInfluencer(
+                    selectedApplicant.email,
+                    selectedApplicant.name,
+                    campaign.title || 'A Campaign',
+                    'Selected – In Progress',
+                    `Congratulations! You have been selected for this campaign by <strong>${campaignData.businessName || 'the business'}</strong>. The campaign is now in progress. Log in to see more details.`
+                );
+            } catch (emailErr) {
+                console.error('Email notification failed:', emailErr);
+            }
+
+            // Notify all rejected applicants
+            try {
+                const rejectedApplicants = (campaignData.applicants || []).filter(
+                    app => app.id !== selectedApplicant.id && app.email
+                );
+                for (const rejected of rejectedApplicants) {
+                    notifyInfluencer(
+                        rejected.email,
+                        rejected.name || 'Influencer',
+                        campaign.title || 'A Campaign',
+                        'Application Update',
+                        `Thank you for applying to <strong>${campaign.title}</strong>. After reviewing all applicants, the business has selected another influencer for this campaign. We encourage you to keep applying — there are many more opportunities on Jetfluenz!`
+                    );
+                }
+            } catch (emailErr) {
+                console.error('Rejected notification failed:', emailErr);
+            }
+
+            alert(`${selectedApplicant.name} has been selected! Campaign is now in progress.`);
+            onClose();
+            window.location.reload();
 
         } catch (error) {
-            console.error("Error accepting candidate:", error);
-            alert("Failed to accept candidate. Please try again.");
+            console.error("Error selecting candidate:", error);
+            alert("Failed to select candidate. Please try again.");
         } finally {
             setAccepting(false);
         }
@@ -318,9 +350,9 @@ export default function CampaignDetailsModal({ campaign, onClose }) {
                                         {accepting ? (
                                             <>
                                                 <Loader2 className="w-5 h-5 animate-spin" />
-                                                Accepting...
+                                                Selecting...
                                             </>
-                                        ) : 'Accept Candidate'}
+                                        ) : '✓ Select Influencer'}
                                     </button>
                                     <button className="px-6 py-3 border-2 border-gray-100 rounded-xl font-bold text-gray-500 hover:bg-gray-50 transition-colors">
                                         View Profile <ExternalLink className="w-4 h-4 inline ml-1" />

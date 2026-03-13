@@ -4,7 +4,6 @@ import { BarChart2, Eye, Edit2, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import AddUserModal from './modals/AddUserModal';
 import UserDetailModal from './modals/UserDetailModal';
-import { deleteWaitlistUser } from '@/lib/waitlist';
 import InstagramStats from '@/components/influencer/InstagramStats';
 
 export default function UsersTable({ users, role, onRefetch }) {
@@ -17,10 +16,24 @@ export default function UsersTable({ users, role, onRefetch }) {
     // Parent should pass filtered users if strict, but if passed all, filter here
     const filteredUsers = users.filter(u => u.role === role);
 
-    const handleDelete = async (id) => {
-        if (!confirm('Delete user?')) return;
-        await deleteWaitlistUser(id);
-        onRefetch();
+    const handleDelete = async (user) => {
+        if (!confirm(`Delete "${user.email}"? This will permanently remove their account and login access.`)) return;
+        try {
+            const res = await fetch('/api/admin/users/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: user.id }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                onRefetch();
+            } else {
+                alert('Delete failed: ' + (data.error || data.errors?.join(', ')));
+            }
+        } catch (err) {
+            console.error('Delete error:', err);
+            alert('An error occurred while deleting the user.');
+        }
     };
 
     return (
@@ -80,7 +93,7 @@ export default function UsersTable({ users, role, onRefetch }) {
                                             )}
                                             <button onClick={() => setViewingUser(user)} className="p-2 text-gray-400 hover:text-blue-600 bg-white border border-gray-100 hover:border-blue-200 rounded-lg shadow-sm"><Eye className="w-4 h-4" /></button>
                                             <button onClick={() => setEditingUser(user)} className="p-2 text-gray-400 hover:text-indigo-600 bg-white border border-gray-100 hover:border-indigo-200 rounded-lg shadow-sm"><Edit2 className="w-4 h-4" /></button>
-                                            <button onClick={() => handleDelete(user.id)} className="p-2 text-gray-400 hover:text-red-600 bg-white border border-gray-100 hover:border-red-200 rounded-lg shadow-sm"><Trash2 className="w-4 h-4" /></button>
+                                            <button onClick={() => handleDelete(user)} className="p-2 text-gray-400 hover:text-red-600 bg-white border border-gray-100 hover:border-red-200 rounded-lg shadow-sm"><Trash2 className="w-4 h-4" /></button>
                                         </div>
                                     </td>
                                 </tr>

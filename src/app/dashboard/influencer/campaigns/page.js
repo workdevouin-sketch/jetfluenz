@@ -4,7 +4,7 @@ import DashboardLayout from '../../../../components/dashboard/DashboardLayout';
 import { Search, MapPin, CheckCircle, Users, TrendingUp, Star } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getAllCampaigns, applyToCampaign, acceptCampaign, rejectCampaign } from '../../../../lib/campaigns';
+import { getAllCampaigns, applyToCampaign } from '../../../../lib/campaigns';
 import { useAuth } from '@/contexts/AuthContext';
 import InfluencerCampaignModal from '../../../../components/dashboard/InfluencerCampaignModal';
 import Toast from '../../../../components/ui/Toast';
@@ -205,34 +205,8 @@ export default function InfluencerCampaigns() {
         }
     };
 
-    const handleAccept = async (campaign) => {
-        if (!confirm(`Accept offer for "${campaign.title}"?`)) return;
-        setActionLoading(campaign.id);
-        try {
-            const res = await acceptCampaign(campaign.id);
-            if (res.success) {
-                showToast('Offer Accepted!');
-                fetchCampaigns();
-            } else {
-                showToast('Failed: ' + res.error, 'error');
-            }
-        } finally {
-            setActionLoading(null);
-        }
-    };
-
-    const handleReject = async (campaign) => {
-        if (!confirm(`Reject offer for "${campaign.title}"?`)) return;
-        setActionLoading(campaign.id);
-        try {
-            const res = await rejectCampaign(campaign.id);
-            if (res.success) {
-                fetchCampaigns();
-            }
-        } finally {
-            setActionLoading(null);
-        }
-    };
+    const handleAccept = async (campaign) => { /* No longer used — business selects directly */ };
+    const handleReject = async (campaign) => { /* No longer used */ };
 
     // ── Derived campaign lists ──────────────────────────────────────────────
 
@@ -464,8 +438,16 @@ const CampaignCard = ({ campaign, user, onApply, onAccept, onReject, loading, ty
 
     const statusStyles = {
         accepted: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        in_progress: 'bg-blue-50 text-blue-700 border-blue-200',
         rejected: 'bg-red-50 text-red-600 border-red-200',
         applied: 'bg-blue-50 text-blue-600 border-blue-200',
+    };
+
+    const statusLabel = {
+        accepted: '✓ Selected',
+        in_progress: '🚀 In Progress',
+        rejected: '✕ Not Selected',
+        applied: '⏳ Pending'
     };
 
     // Match data (browse/recommended only)
@@ -602,9 +584,7 @@ const CampaignCard = ({ campaign, user, onApply, onAccept, onReject, loading, ty
 
                 {type === 'applications' && (
                     <div className={`w-full py-2 rounded-lg text-center text-[10px] font-bold border select-none ${statusStyles[appStatus] || statusStyles.applied}`}>
-                        {appStatus === 'accepted' ? '✓ Accepted'
-                            : appStatus === 'rejected' ? '✕ Not Selected'
-                                : '⏳ Pending'}
+                        {statusLabel[appStatus] || '⏳ Pending'}
                     </div>
                 )}
             </div>

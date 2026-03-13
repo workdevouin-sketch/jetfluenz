@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { addUserFromAdmin, updateWaitlistUser } from '@/lib/waitlist';
+import { updateWaitlistUser } from '@/lib/waitlist';
 import { BarChart2 } from 'lucide-react';
 import LocationAutocompleteAdmin from '../LocationAutocompleteAdmin';
 
@@ -63,9 +63,21 @@ export default function AddUserModal({ onClose, onSuccess, initialUser = null })
 
             let res;
             if (initialUser) {
+                // Update existing — use client-side Firestore update
                 res = await updateWaitlistUser(initialUser.id, dataToSubmit);
             } else {
-                res = await addUserFromAdmin(dataToSubmit);
+                // Create new — call secure Admin API route (creates Firebase Auth + Firestore together)
+                const response = await fetch('/api/admin/users/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataToSubmit),
+                });
+                res = await response.json();
+                if (!res.success) {
+                    alert('Failed to create user: ' + res.error);
+                    setActionLoading(false);
+                    return;
+                }
             }
 
             if (res.success) {
